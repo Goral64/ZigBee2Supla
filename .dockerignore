@@ -1,0 +1,9 @@
+.git
+.idea
+build
+cmake-build-*
+**/__pycache__
+config.local.json
+identities.json
+identities.json.tmp
+*.pem

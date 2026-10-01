@@ -1,0 +1,6 @@
+repository: https://github.com/SUPLA/supla-device.git
+path: src/supla-common
+ref: a23921e223f482417fead170427383bb18eaea01
+commit: a23921e223f482417fead170427383bb18eaea01
+commit_date: 2026-09-28
+files: srpc.c srpc.h proto.c proto.h lck.c lck.h log.h

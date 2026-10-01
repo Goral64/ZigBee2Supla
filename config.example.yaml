@@ -1,0 +1,32 @@
+# Konfiguracja zigbee2supla. Skopiuj do config.local.yaml (plik ignorowany
+# przez git) i uzupełnij. Każdą opcję można też podać zmienną środowiskową
+# Z2S_<OPCJA>, która ma pierwszeństwo przed plikiem. Opis opcji: README.md.
+
+# --- Supla ------------------------------------------------------------------
+supla_server: svr1.supla.org
+supla_email: twoj@email.pl
+# 0 = certyfikat CA Supli (Supla Cloud), 3 = przypięty certyfikat lokalnego
+# serwera (wtedy także supla_ca_file)
+supla_security_level: 0
+
+# --- zigbee2mqtt (MQTT) -----------------------------------------------------
+mqtt_host: localhost
+mqtt_port: 1883
+mqtt_username: ""
+mqtt_password: ""
+z2m_base_topic: zigbee2mqtt
+
+# --- Bramka -----------------------------------------------------------------
+# Katalog na identities.json, czyli tożsamość urządzeń w Supli. Nie zgub go.
+state_dir: .
+log_level: info          # error, warning, info, debug, verbose
+max_parallel_connects: 4
+
+# Tylko te urządzenia (nazwa z zigbee2mqtt albo adres IEEE).
+# Pusta lista = wszystkie obsługiwane.
+include: []
+#  - Lampa salon
+#  - "0x00158d0001a2b3c4"
+
+# Te urządzenia są pomijane.
+exclude: []

@@ -1,0 +1,6 @@
+# Styl kodu projektu (bez third_party/, który jest kopią z supla-device).
+BasedOnStyle: Google
+ColumnLimit: 80
+DerivePointerAlignment: false
+PointerAlignment: Right
+IncludeBlocks: Preserve

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Development container for zigbee2supla. Start it through tools/dev/dev.sh,
+# which sets the variables below.
+#
+# The repository is mounted at the same path as on the host, so build/ and
+# compile_commands.json are valid both inside the container and for an IDE
+# running on the host.
+
+name: zigbee2supla-dev
+
+services:
+  dev:
+    build:
+      context: .
+    image: zigbee2supla-dev:latest
+    user: "${Z2S_UID:?run tools/dev/dev.sh}:${Z2S_GID:?run tools/dev/dev.sh}"
+    working_dir: ${Z2S_DIR:?run tools/dev/dev.sh}
+    volumes:
+      - ${Z2S_DIR}:${Z2S_DIR}
+    # Host networking: the gateway reaches the MQTT broker and the Supla
+    # server like a native process, and ports opened inside (mosquitto,
+    # tools/fake_supla_server.py) are reachable from the host.
+    network_mode: host
+    # gdb and the sanitizers (LeakSanitizer) need ptrace.
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    stdin_open: true
+    tty: true
+    command: ["/bin/bash"]

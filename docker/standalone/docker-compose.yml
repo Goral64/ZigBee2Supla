@@ -1,0 +1,26 @@
+# zigbee2supla as a standalone container: the Supla server and the MQTT
+# broker (zigbee2mqtt / Home Assistant) run on other machines.
+#
+# Installation (details: docs/docker.md, chapter 3):
+#   1. copy this directory (docker-compose.yml, zigbee2supla.env.example)
+#      to the Docker host, rename zigbee2supla.env.example to zigbee2supla.env
+#      and fill it in,
+#   2. for a local Supla server (supla-docker) put its certificate in
+#      ./certs/supla-server.crt,
+#   3. docker compose up -d
+services:
+  zigbee2supla:
+    container_name: zigbee2supla
+    image: ${ZIGBEE2SUPLA_IMAGE:-ghcr.io/goral64/zigbee2supla:latest}
+    restart: unless-stopped
+    env_file:
+      - zigbee2supla.env
+    volumes:
+      # identities.json - Supla identities of all devices. Back it up!
+      - ./data:/data
+      # Certificate of a local Supla server (Z2S_SUPLA_SECURITY_LEVEL=3).
+      - ./certs:/certs:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 50m

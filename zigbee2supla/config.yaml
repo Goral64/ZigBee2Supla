@@ -1,0 +1,56 @@
+name: Zigbee2Supla
+# Must be the version of a release: the Supervisor pulls the add-on image
+# built by CI for this tag (see docs/wydania.md).
+version: "0.3.0-beta.2"
+image: ghcr.io/goral64/zigbee2supla-addon-{arch}
+slug: zigbee2supla
+description: >-
+  Zigbee2MQTT to Supla bridge: każde urządzenie ZigBee z zigbee2mqtt
+  widoczne w Supli jako osobne urządzenie
+url: https://github.com/Goral64/ZigBee2Supla
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+startup: application
+boot: auto
+services:
+  - mqtt:need
+# Access to the Home Assistant API (device registry) for
+# ha_disable_supla_duplicates.
+homeassistant_api: true
+# identities.json (GUID/AuthKey of all devices) is stored in the add-on
+# config directory, visible in HA as /addon_configs/<slug>/ (Samba, File
+# editor), so it can be backed up and copied.
+map:
+  - addon_config:rw
+options:
+  supla_server: ""
+  supla_email: ""
+  supla_security_level: 0
+  z2m_base_topic: zigbee2mqtt
+  max_parallel_connects: 4
+  log_level: info
+  ha_disable_supla_duplicates: true
+  include: []
+  exclude: []
+schema:
+  supla_server: str
+  supla_email: email
+  supla_security_level: int(0,3)
+  supla_ca_file: str?
+  supla_port: port?
+  z2m_base_topic: str
+  mqtt_host: str?
+  mqtt_port: port?
+  mqtt_username: str?
+  mqtt_password: password?
+  mqtt_client_id: str?
+  max_parallel_connects: int(1,16)
+  log_level: list(error|warning|info|debug|verbose)
+  ha_disable_supla_duplicates: bool
+  include:
+    - str?
+  exclude:
+    - str?

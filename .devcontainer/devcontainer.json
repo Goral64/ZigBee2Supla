@@ -1,0 +1,29 @@
+{
+  "name": "zigbee2supla",
+  "build": {
+    "dockerfile": "../tools/dev/Dockerfile",
+    "context": "../tools/dev"
+  },
+  // Same path inside the container as on the host, like tools/dev/dev.sh,
+  // so build/ can be shared between both ways of working.
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+  "workspaceFolder": "${localWorkspaceFolder}",
+  "runArgs": [
+    "--network=host",
+    "--cap-add=SYS_PTRACE",
+    "--security-opt=seccomp=unconfined"
+  ],
+  "updateRemoteUserUID": true,
+  "remoteUser": "ubuntu",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools"
+      ],
+      "settings": {
+        "cmake.useCMakePresets": "always"
+      }
+    }
+  }
+}

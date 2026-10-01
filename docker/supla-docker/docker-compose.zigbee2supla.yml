@@ -1,0 +1,32 @@
+# zigbee2supla as a part of supla-docker (https://github.com/SUPLA/supla-docker).
+#
+# Installation (details: docs/docker.md):
+#   1. copy this file and zigbee2supla.env.example (as zigbee2supla.env) to the
+#      supla-docker directory,
+#   2. append ":docker-compose.zigbee2supla.yml" to COMPOSE_FILE in .env,
+#   3. ./supla.sh start
+services:
+  zigbee2supla:
+    container_name: ${COMPOSE_PROJECT_NAME}-zigbee2supla
+    image: ${ZIGBEE2SUPLA_IMAGE:-ghcr.io/goral64/zigbee2supla:latest}
+    restart: unless-stopped
+    env_file:
+      - zigbee2supla.env
+    environment:
+      # supla-server from supla-docker, reachable by its service name.
+      Z2S_SUPLA_SERVER: supla-server
+      # supla-docker uses a self-signed certificate (CN=SUPLA, 365 days):
+      # trust exactly this certificate.
+      Z2S_SUPLA_SECURITY_LEVEL: "3"
+      Z2S_SUPLA_CA_FILE: /etc/supla-server-ssl/cert.crt
+      Z2S_STATE_DIR: /data
+    volumes:
+      - ./ssl/server:/etc/supla-server-ssl:ro
+      # identities.json - Supla identities of all devices. Back it up!
+      - ${VOLUME_DATA}/zigbee2supla:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 50m
+    depends_on:
+      - supla-server

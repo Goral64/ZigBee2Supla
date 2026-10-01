@@ -1,0 +1,152 @@
+[
+  {
+    "ieee_address": "0x00124b0000000001",
+    "type": "Coordinator",
+    "network_address": 0,
+    "friendly_name": "Coordinator",
+    "supported": true,
+    "disabled": false,
+    "interview_completed": true,
+    "definition": null
+  },
+  {
+    "ieee_address": "0x00158d0001a2b3c4",
+    "type": "EndDevice",
+    "network_address": 1234,
+    "friendly_name": "Salon/czujnik",
+    "supported": true,
+    "disabled": false,
+    "interview_completed": true,
+    "software_build_id": "3000-0001",
+    "definition": {
+      "model": "WSDCGQ11LM",
+      "vendor": "Aqara",
+      "description": "Temperature, humidity and pressure sensor",
+      "exposes": [
+        {"type": "numeric", "name": "battery", "property": "battery", "access": 1, "unit": "%"},
+        {"type": "numeric", "name": "temperature", "property": "temperature", "access": 1, "unit": "°C"},
+        {"type": "numeric", "name": "humidity", "property": "humidity", "access": 1, "unit": "%"},
+        {"type": "numeric", "name": "pressure", "property": "pressure", "access": 1, "unit": "hPa"},
+        {"type": "numeric", "name": "voltage", "property": "voltage", "access": 1, "unit": "mV"},
+        {"type": "numeric", "name": "linkquality", "property": "linkquality", "access": 1, "unit": "lqi"}
+      ]
+    }
+  },
+  {
+    "ieee_address": "0x00158d0002c3d4e5",
+    "type": "EndDevice",
+    "network_address": 2345,
+    "friendly_name": "Drzwi wejsciowe",
+    "supported": true,
+    "disabled": false,
+    "interview_completed": true,
+    "definition": {
+      "model": "MCCGQ11LM",
+      "vendor": "Aqara",
+      "description": "Door and window sensor",
+      "exposes": [
+        {"type": "binary", "name": "contact", "property": "contact", "access": 1, "value_on": false, "value_off": true},
+        {"type": "numeric", "name": "battery", "property": "battery", "access": 1},
+        {"type": "numeric", "name": "device_temperature", "property": "device_temperature", "access": 1}
+      ]
+    }
+  },
+  {
+    "ieee_address": "0xa4c1380000000003",
+    "type": "Router",
+    "network_address": 3456,
+    "friendly_name": "Wlacznik kuchnia",
+    "supported": true,
+    "disabled": false,
+    "interview_completed": true,
+    "definition": {
+      "model": "TS0002",
+      "vendor": "Tuya",
+      "description": "2 gang switch",
+      "exposes": [
+        {"type": "switch", "endpoint": "l1", "features": [
+          {"type": "binary", "name": "state", "property": "state_l1", "access": 7, "value_on": "ON", "value_off": "OFF", "value_toggle": "TOGGLE", "endpoint": "l1"}
+        ]},
+        {"type": "switch", "endpoint": "l2", "features": [
+          {"type": "binary", "name": "state", "property": "state_l2", "access": 7, "value_on": "ON", "value_off": "OFF", "value_toggle": "TOGGLE", "endpoint": "l2"}
+        ]},
+        {"type": "enum", "name": "power_on_behavior", "property": "power_on_behavior", "access": 7, "values": ["off", "on", "previous"]},
+        {"type": "numeric", "name": "linkquality", "property": "linkquality", "access": 1}
+      ]
+    }
+  },
+  {
+    "ieee_address": "0x000d6ffffe000004",
+    "type": "Router",
+    "network_address": 4567,
+    "friendly_name": "Lampa sypialnia",
+    "supported": true,
+    "disabled": false,
+    "interview_completed": true,
+    "definition": {
+      "model": "LED1836G9",
+      "vendor": "IKEA",
+      "description": "TRADFRI bulb E27",
+      "exposes": [
+        {"type": "light", "features": [
+          {"type": "binary", "name": "state", "property": "state", "access": 7, "value_on": "ON", "value_off": "OFF", "value_toggle": "TOGGLE"},
+          {"type": "numeric", "name": "brightness", "property": "brightness", "access": 7, "value_min": 0, "value_max": 254}
+        ]}
+      ]
+    }
+  },
+  {
+    "ieee_address": "0x0017880100000005",
+    "type": "EndDevice",
+    "network_address": 5678,
+    "friendly_name": "Ruch korytarz",
+    "supported": true,
+    "disabled": false,
+    "interview_completed": true,
+    "definition": {
+      "model": "9290012607",
+      "vendor": "Philips",
+      "description": "Hue motion sensor",
+      "exposes": [
+        {"type": "binary", "name": "occupancy", "property": "occupancy", "access": 1, "value_on": true, "value_off": false},
+        {"type": "numeric", "name": "temperature", "property": "temperature", "access": 1},
+        {"type": "numeric", "name": "illuminance", "property": "illuminance", "access": 1}
+      ]
+    }
+  },
+  {
+    "ieee_address": "0x0000000000000006",
+    "type": "EndDevice",
+    "friendly_name": "W trakcie parowania",
+    "supported": true,
+    "disabled": false,
+    "interview_completed": false,
+    "definition": null
+  },
+  {
+    "ieee_address": "0x0000000000000007",
+    "type": "EndDevice",
+    "friendly_name": "Nieobslugiwane",
+    "supported": false,
+    "disabled": false,
+    "interview_completed": true,
+    "definition": null
+  },
+  {
+    "ieee_address": "0x0000000000000008",
+    "type": "Router",
+    "friendly_name": "Wylaczone",
+    "supported": true,
+    "disabled": true,
+    "interview_completed": true,
+    "definition": {
+      "model": "X",
+      "vendor": "Y",
+      "exposes": [
+        {"type": "switch", "features": [
+          {"type": "binary", "name": "state", "property": "state", "access": 7, "value_on": "ON", "value_off": "OFF"}
+        ]}
+      ]
+    }
+  }
+]
