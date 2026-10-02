@@ -11,6 +11,10 @@ scenariusze:
 Trzecią formą dystrybucji jest dodatek Home Assistant (katalog
 `zigbee2supla/`, opis w README).
 
+Kto nie ma Home Assistanta, może uruchomić zigbee2mqtt z własnym
+koordynatorem USB razem z mostkiem, zob.
+[Własny koordynator ZigBee](#8-własny-koordynator-zigbee-bez-home-assistanta).
+
 1. [Obraz](#1-obraz)
 2. [Dołączenie do supla-docker](#2-dołączenie-do-supla-docker)
 3. [Samodzielny kontener (Supla i HA na innych maszynach)](#3-samodzielny-kontener)
@@ -18,6 +22,7 @@ Trzecią formą dystrybucji jest dodatek Home Assistant (katalog
 5. [Certyfikat serwera (`Z2S_SUPLA_SECURITY_LEVEL`)](#5-certyfikat-serwera)
 6. [Dane i kopia zapasowa](#6-dane-i-kopia-zapasowa)
 7. [Rozwiązywanie problemów](#7-rozwiązywanie-problemów)
+8. [Własny koordynator ZigBee, bez Home Assistanta](#8-własny-koordynator-zigbee-bez-home-assistanta)
 
 ## 1. Obraz
 
@@ -244,3 +249,86 @@ services:
 Potem `docker compose up -d`. Dla wszystkich kontenerów naraz to samo
 ustawia wpis `"dns": ["192.168.1.1"]` w `/etc/docker/daemon.json`
 i restart Dockera.
+
+## 8. Własny koordynator ZigBee, bez Home Assistanta
+
+Jeśli nie masz Home Assistanta, a chcesz mieć urządzenia ZigBee w Supli,
+możesz uruchomić zigbee2mqtt i Mosquitto razem z mostkiem. Potrzebujesz
+maszyny z Linuksem i Dockerem (np. Raspberry Pi) i koordynatora USB
+(np. SONOFF ZBDongle, SLZB, ConBee).
+
+Najpierw podłącz koordynator i sprawdź, pod jaką nazwą widzi go system:
+
+```sh
+ls -l /dev/serial/by-id/
+```
+
+### Z Supla Cloud
+
+```sh
+mkdir zigbee2supla && cd zigbee2supla
+URL=https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker
+curl -LO $URL/standalone/docker-compose.yml
+curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt.yml
+curl -L -o zigbee2supla.env $URL/standalone/zigbee2supla.env.example
+```
+
+W `zigbee2supla.env` wpisz `Z2S_SUPLA_SERVER` (adres serwera widoczny
+w Supla Cloud, np. `svr12.supla.org`) i `Z2S_SUPLA_EMAIL`. Pola `Z2S_MQTT_*`
+zostaw puste. Potem utwórz plik `.env` z nazwą koordynatora:
+
+```
+ZIGBEE_ADAPTER=/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_...
+COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml
+```
+
+i uruchom:
+
+```sh
+docker compose up -d
+```
+
+### Z własnym serwerem Supli (supla-docker)
+
+Najpierw dołącz mostek do supla-docker, jak w
+[Dołączenie do supla-docker](#2-dołączenie-do-supla-docker), ale pola
+`Z2S_MQTT_*` w `zigbee2supla.env` zostaw puste. Następnie w katalogu
+supla-docker:
+
+```sh
+curl -LO https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker/zigbee2mqtt/docker-compose.zigbee2mqtt.yml
+```
+
+W `.env` supla-docker dopisz `:docker-compose.zigbee2mqtt.yml` na końcu
+`COMPOSE_FILE` i dodaj linię z koordynatorem:
+
+```
+COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml
+ZIGBEE_ADAPTER=/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_...
+```
+
+i uruchom `./supla.sh start`. Przy pierwszym starcie supla-docker zdarza
+się, że supla-server ruszy przed Cloud i się wyłączy, a mostek pisze
+w kółko `Connection refused`. Wtedy wystarczy `docker restart supla-server`.
+
+### Pierwsze uruchomienie zigbee2mqtt
+
+1. Otwórz `http://<adres maszyny>:8080`. zigbee2mqtt pokaże formularz
+   pierwszego uruchomienia.
+2. Wybierz rodzaj koordynatora (np. `zstack` dla SONOFF ZBDongle-P,
+   `ember` dla ZBDongle-E, `deconz` dla ConBee). Port i MQTT są już
+   ustawione, nie zmieniaj ich. W „Closest WiFi Channel” wpisz kanał
+   swojej sieci Wi-Fi 2,4 GHz, a zigbee2mqtt dobierze kanał ZigBee,
+   który jej nie przeszkadza. Kanału ZigBee nie da się później łatwo
+   zmienić.
+3. Zapisz. Po chwili otworzy się zwykły interfejs zigbee2mqtt.
+4. W Supla Cloud włącz rejestrację nowych urządzeń.
+5. W zigbee2mqtt kliknij „Permit join” i sparuj urządzenie. Po chwili
+   pojawi się w Supli jako osobne urządzenie.
+
+Mosquitto jest dostępny tylko wewnątrz tego zestawu, bez hasła i bez
+wystawionego portu. Dane zigbee2mqtt (klucz sieci i sparowane urządzenia)
+są w `./zigbee2mqtt`. Kopię zapasową rób razem z `identities.json`, bo bez
+tych danych trzeba parować wszystko od nowa. Inny port strony ustawisz
+zmienną `ZIGBEE2MQTT_PORT` w `.env`, a wersję zigbee2mqtt zmienną
+`ZIGBEE2MQTT_IMAGE` (domyślnie `latest`).
