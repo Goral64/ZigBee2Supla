@@ -240,8 +240,9 @@ cmd_setup() {
     2)
       SUPLA_DOCKER_DIR=$(ask "Katalog supla-docker" "$(find_supla_docker)")
       SUPLA_DOCKER_DIR=$(readlink -f "$SUPLA_DOCKER_DIR")
-      [ -f "$SUPLA_DOCKER_DIR/supla.sh" ] && [ -f "$SUPLA_DOCKER_DIR/.env" ] ||
+      if [ ! -f "$SUPLA_DOCKER_DIR/supla.sh" ] || [ ! -f "$SUPLA_DOCKER_DIR/.env" ]; then
         die "W $SUPLA_DOCKER_DIR nie ma supla.sh i .env. Uruchom najpierw supla-docker."
+      fi
       ;;
     3)
       server=$(ask "Adres serwera Supli (IP albo nazwa)")
