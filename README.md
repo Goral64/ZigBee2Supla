@@ -50,7 +50,9 @@ pojawią się w Supli jako nowe.
 ## Wymagania
 
 * zigbee2mqtt z brokerem MQTT (np. dodatki „Zigbee2MQTT” i „Mosquitto
-  broker” w Home Assistant); zalecana włączona funkcja *availability*,
+  broker” w Home Assistant; zalecana włączona funkcja *availability*)
+  albo koordynator ZigBee USB, wtedy zigbee2mqtt instaluje się razem
+  z mostkiem,
 * konto Supli: Supla Cloud albo własny serwer (supla-docker),
 * miejsce do uruchomienia mostka: dodatek Home Assistant albo Docker
   (amd64, arm64, armv7).
@@ -71,31 +73,25 @@ pojawią się w Supli jako nowe.
 `identities.json` jest w katalogu `/addon_configs/<slug dodatku>/`;
 uwzględnij go w kopii zapasowej Home Assistant.
 
-### Docker (osobna maszyna)
+### Docker
+
+Na maszynie z Linuksem i Dockerem (np. Raspberry Pi albo ta sama, na której
+działa supla-docker):
 
 ```sh
-mkdir zigbee2supla && cd zigbee2supla
-curl -LO https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker/standalone/docker-compose.yml
-curl -L -o zigbee2supla.env \
-  https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker/standalone/zigbee2supla.env.example
-# uzupełnij zigbee2supla.env: Z2S_SUPLA_SERVER, Z2S_SUPLA_EMAIL, Z2S_MQTT_*
-docker compose up -d
-docker logs -f zigbee2supla
+curl -L https://github.com/Goral64/ZigBee2Supla/releases/latest/download/zigbee2supla-docker.tar.gz | tar xz
+cd zigbee2supla
+./z2s.sh
 ```
 
-Tożsamości urządzeń są w `./data/identities.json`. Szczegóły, własny
-serwer Supli i certyfikaty: [docs/docker.md](docs/docker.md).
+Skrypt zapyta o serwer Supli, e-mail konta i o to, skąd brać urządzenia:
+z koordynatora USB podłączonego do tej maszyny (wtedy sam doda
+zigbee2mqtt) albo z zigbee2mqtt, który już masz, np. w Home Assistant.
+Potem uruchomi mostek. Do supla-docker dołączy się sam, wystarczy
+wskazać jego katalog.
 
-### Obok własnego serwera Supli (supla-docker)
-
-Mostek może być kolejną usługą supla-docker na tej samej maszynie:
-[docs/docker.md, rozdział 2](docs/docker.md#2-dołączenie-do-supla-docker).
-
-### Bez Home Assistanta, z własnym koordynatorem
-
-Jeśli nie masz Home Assistanta, zigbee2mqtt i Mosquitto mogą działać
-razem z mostkiem, a koordynator USB podłączasz do tej samej maszyny:
-[docs/docker.md](docs/docker.md#8-własny-koordynator-zigbee-bez-home-assistanta).
+Dalej przydają się `./z2s.sh status`, `logs`, `update` i `backup`.
+Ręczna instalacja i szczegóły: [docs/docker.md](docs/docker.md).
 
 ## Przed pierwszym uruchomieniem
 

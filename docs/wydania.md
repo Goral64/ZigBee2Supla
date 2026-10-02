@@ -5,7 +5,9 @@ Obrazy budują się w GitHub Actions (`.github/workflows/docker.yml`):
 * każdy commit na `main` → `ghcr.io/goral64/zigbee2supla:main`,
 * każdy tag `vX.Y.Z` (także `vX.Y.Z-beta.N`) → obraz samodzielny
   `:X.Y.Z` (i `:X.Y` dla wydań bez przyrostka) oraz `:latest`, a także
-  obrazy dodatku Home Assistant `zigbee2supla-addon-{amd64,aarch64,armv7}:X.Y.Z`.
+  obrazy dodatku Home Assistant `zigbee2supla-addon-{amd64,aarch64,armv7}:X.Y.Z`
+  i wydanie na GitHubie z paczką `zigbee2supla-docker.tar.gz` (`z2s.sh`
+  i pliki compose, `tools/package_docker.sh`).
 
 Dodatek HA nie buduje się na maszynie z Home Assistant: Supervisor pobiera
 obraz o wersji z `zigbee2supla/config.yaml`. Wersja w tym pliku musi więc

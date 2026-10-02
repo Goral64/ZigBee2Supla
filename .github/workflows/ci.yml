@@ -32,3 +32,11 @@ jobs:
       - run: |
           find core backends apps platform tests integrations -name '*.cpp' -o -name '*.h' \
             | xargs clang-format --dry-run -Werror
+
+  z2s-sh:
+    name: z2s.sh
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck docker/z2s.sh tools/package_docker.sh tests/z2s_sh_test.sh
+      - run: tests/z2s_sh_test.sh

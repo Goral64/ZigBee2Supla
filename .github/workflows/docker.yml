@@ -82,3 +82,21 @@ jobs:
           tags: ${{ env.IMAGE }}:${{ env.VERSION }}
           cache-from: type=gha,scope=addon-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=addon-${{ matrix.arch }}
+
+  package:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: tools/package_docker.sh zigbee2supla-docker.tar.gz
+      # Not a pre-release even for betas: releases/latest/download/... must
+      # point to the newest package.
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --title "Zigbee2Supla ${GITHUB_REF_NAME#v}" --generate-notes --latest
+          gh release upload "$GITHUB_REF_NAME" zigbee2supla-docker.tar.gz --clobber
