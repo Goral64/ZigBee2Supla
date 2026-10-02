@@ -1,5 +1,9 @@
 # Kontener Docker
 
+Najprościej zainstalować mostek skryptem `z2s.sh` z paczki wydania
+(README, „Szybki start”). Skrypt sam robi to, co opisują rozdziały 2, 3
+i 8. Ten dokument opisuje to samo ręcznie, z wszystkimi opcjami.
+
 zigbee2supla jest dostępny jako obraz Dockera. Jeden obraz obsługuje dwa
 scenariusze:
 
@@ -255,7 +259,8 @@ i restart Dockera.
 Jeśli nie masz Home Assistanta, a chcesz mieć urządzenia ZigBee w Supli,
 możesz uruchomić zigbee2mqtt i Mosquitto razem z mostkiem. Potrzebujesz
 maszyny z Linuksem i Dockerem (np. Raspberry Pi) i koordynatora USB
-(np. SONOFF ZBDongle, SLZB, ConBee).
+(np. SONOFF ZBDongle, SLZB, ConBee). `./z2s.sh` robi to sam po wybraniu
+koordynatora USB. Ręcznie wygląda to tak.
 
 Najpierw podłącz koordynator i sprawdź, pod jaką nazwą widzi go system:
 
