@@ -91,6 +91,12 @@ serwer Supli i certyfikaty: [docs/docker.md](docs/docker.md).
 Mostek może być kolejną usługą supla-docker na tej samej maszynie:
 [docs/docker.md, rozdział 2](docs/docker.md#2-dołączenie-do-supla-docker).
 
+### Bez Home Assistanta, z własnym koordynatorem
+
+Jeśli nie masz Home Assistanta, zigbee2mqtt i Mosquitto mogą działać
+razem z mostkiem, a koordynator USB podłączasz do tej samej maszyny:
+[docs/docker.md](docs/docker.md#8-własny-koordynator-zigbee-bez-home-assistanta).
+
 ## Przed pierwszym uruchomieniem
 
 1. **Włącz rejestrację nowych urządzeń** w Supla Cloud (Moje urządzenia →
