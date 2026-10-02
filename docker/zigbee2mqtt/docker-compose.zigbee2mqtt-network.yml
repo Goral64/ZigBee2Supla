@@ -1,0 +1,11 @@
+# Network ZigBee coordinator (e.g. SLZB-06) for docker-compose.zigbee2mqtt.yml.
+# Set in .env:
+#   ZIGBEE2MQTT_SERIAL_PORT=tcp://<address>:6638
+#   ZIGBEE2MQTT_SERIAL_ADAPTER=zstack (TI CC2652/CC1352) or ember (Silicon Labs)
+# zigbee2mqtt cannot discover network coordinators from a container, so the
+# adapter type has to be given.
+services:
+  zigbee2mqtt:
+    environment:
+      ZIGBEE2MQTT_CONFIG_SERIAL_PORT: ${ZIGBEE2MQTT_SERIAL_PORT:?set ZIGBEE2MQTT_SERIAL_PORT in .env}
+      ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: ${ZIGBEE2MQTT_SERIAL_ADAPTER:?set ZIGBEE2MQTT_SERIAL_ADAPTER in .env}
