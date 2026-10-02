@@ -16,7 +16,7 @@ Trzecią formą dystrybucji jest dodatek Home Assistant (katalog
 `zigbee2supla/`, opis w README).
 
 Kto nie ma Home Assistanta, może uruchomić zigbee2mqtt z własnym
-koordynatorem USB razem z mostkiem, zob.
+koordynatorem (USB albo sieciowym) razem z mostkiem, zob.
 [Własny koordynator ZigBee](#8-własny-koordynator-zigbee-bez-home-assistanta).
 
 1. [Obraz](#1-obraz)
@@ -258,15 +258,18 @@ i restart Dockera.
 
 Jeśli nie masz Home Assistanta, a chcesz mieć urządzenia ZigBee w Supli,
 możesz uruchomić zigbee2mqtt i Mosquitto razem z mostkiem. Potrzebujesz
-maszyny z Linuksem i Dockerem (np. Raspberry Pi) i koordynatora USB
-(np. SONOFF ZBDongle, SLZB, ConBee). `./z2s.sh` robi to sam po wybraniu
-koordynatora USB. Ręcznie wygląda to tak.
+maszyny z Linuksem i Dockerem (np. Raspberry Pi) i koordynatora: USB
+(np. SONOFF ZBDongle, ConBee) albo sieciowego (np. SLZB-06). `./z2s.sh`
+robi wszystko sam po wybraniu koordynatora. Ręcznie wygląda to tak.
 
-Najpierw podłącz koordynator i sprawdź, pod jaką nazwą widzi go system:
+Koordynator USB podłącz i sprawdź, pod jaką nazwą widzi go system:
 
 ```sh
 ls -l /dev/serial/by-id/
 ```
+
+Koordynator sieciowy ma adres IP i port, zwykle 6638. zigbee2mqtt łączy
+się z nim pod adresem w rodzaju `tcp://192.168.1.50:6638`.
 
 ### Z Supla Cloud
 
@@ -275,15 +278,23 @@ mkdir zigbee2supla && cd zigbee2supla
 URL=https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker
 curl -LO $URL/standalone/docker-compose.yml
 curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt.yml
+curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt-usb.yml
 curl -L -o zigbee2supla.env $URL/standalone/zigbee2supla.env.example
 ```
 
 W `zigbee2supla.env` wpisz `Z2S_SUPLA_SERVER` (adres serwera widoczny
 w Supla Cloud, np. `svr12.supla.org`) i `Z2S_SUPLA_EMAIL`. Pola `Z2S_MQTT_*`
-zostaw puste. Potem utwórz plik `.env` z nazwą koordynatora:
+zostaw puste. Potem utwórz plik `.env`. Dla koordynatora USB:
 
 ```
 ZIGBEE_ADAPTER=/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_...
+COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml
+```
+
+Dla sieciowego:
+
+```
+ZIGBEE2MQTT_SERIAL_PORT=tcp://192.168.1.50:6638
 COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml
 ```
 
@@ -298,17 +309,13 @@ docker compose up -d
 Najpierw dołącz mostek do supla-docker, jak w
 [Dołączenie do supla-docker](#2-dołączenie-do-supla-docker), ale pola
 `Z2S_MQTT_*` w `zigbee2supla.env` zostaw puste. Następnie w katalogu
-supla-docker:
-
-```sh
-curl -LO https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker/zigbee2mqtt/docker-compose.zigbee2mqtt.yml
-```
-
-W `.env` supla-docker dopisz `:docker-compose.zigbee2mqtt.yml` na końcu
-`COMPOSE_FILE` i dodaj linię z koordynatorem:
+supla-docker pobierz `docker-compose.zigbee2mqtt.yml` i, dla koordynatora
+USB, `docker-compose.zigbee2mqtt-usb.yml` (jak wyżej). W `.env` supla-docker
+dopisz te pliki na końcu `COMPOSE_FILE` i dodaj linię z koordynatorem,
+np. dla USB:
 
 ```
-COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml
+COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml
 ZIGBEE_ADAPTER=/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_...
 ```
 
@@ -320,8 +327,9 @@ w kółko `Connection refused`. Wtedy wystarczy `docker restart supla-server`.
 
 1. Otwórz `http://<adres maszyny>:8080`. zigbee2mqtt pokaże formularz
    pierwszego uruchomienia.
-2. Wybierz rodzaj koordynatora (np. `zstack` dla SONOFF ZBDongle-P,
-   `ember` dla ZBDongle-E, `deconz` dla ConBee). Port i MQTT są już
+2. Wybierz rodzaj koordynatora (np. `zstack` dla SONOFF ZBDongle-P
+   i SLZB-06, `ember` dla ZBDongle-E i SLZB-06M, `deconz` dla ConBee).
+   Port i MQTT są już
    ustawione, nie zmieniaj ich. W „Closest WiFi Channel” wpisz kanał
    swojej sieci Wi-Fi 2,4 GHz, a zigbee2mqtt dobierze kanał ZigBee,
    który jej nie przeszkadza. Kanału ZigBee nie da się później łatwo

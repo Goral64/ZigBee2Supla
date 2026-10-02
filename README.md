@@ -51,8 +51,8 @@ pojawią się w Supli jako nowe.
 
 * zigbee2mqtt z brokerem MQTT (np. dodatki „Zigbee2MQTT” i „Mosquitto
   broker” w Home Assistant; zalecana włączona funkcja *availability*)
-  albo koordynator ZigBee USB, wtedy zigbee2mqtt instaluje się razem
-  z mostkiem,
+  albo koordynator ZigBee (USB lub sieciowy), wtedy zigbee2mqtt instaluje
+  się razem z mostkiem,
 * konto Supli: Supla Cloud albo własny serwer (supla-docker),
 * miejsce do uruchomienia mostka: dodatek Home Assistant albo Docker
   (amd64, arm64, armv7).
@@ -85,8 +85,8 @@ cd zigbee2supla
 ```
 
 Skrypt zapyta o serwer Supli, e-mail konta i o to, skąd brać urządzenia:
-z koordynatora USB podłączonego do tej maszyny (wtedy sam doda
-zigbee2mqtt) albo z zigbee2mqtt, który już masz, np. w Home Assistant.
+z własnego koordynatora, USB albo sieciowego (wtedy sam doda
+zigbee2mqtt), albo z zigbee2mqtt, który już masz, np. w Home Assistant.
 Potem uruchomi mostek. Do supla-docker dołączy się sam, wystarczy
 wskazać jego katalog.
 

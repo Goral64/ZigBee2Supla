@@ -1,13 +1,17 @@
-# zigbee2mqtt and Mosquitto next to zigbee2supla, for a USB ZigBee coordinator
+# zigbee2mqtt and Mosquitto next to zigbee2supla, for an own ZigBee coordinator
 # without Home Assistant. Works with docker/standalone and docker/supla-docker.
 #
 # Installation (details: docs/docker.md):
-#   1. copy this file next to the zigbee2supla compose file,
+#   1. copy this file (and docker-compose.zigbee2mqtt-usb.yml for a USB
+#      coordinator) next to the zigbee2supla compose file,
 #   2. in .env of that directory (create it for standalone) set the
-#      coordinator and the compose files, e.g.:
+#      coordinator and the compose files, e.g. for USB:
 #        ZIGBEE_ADAPTER=/dev/serial/by-id/usb-...
+#        COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml
+#      or for a network coordinator:
+#        ZIGBEE2MQTT_SERIAL_PORT=tcp://192.168.1.50:6638
 #        COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml
-#      (supla-docker: append ":docker-compose.zigbee2mqtt.yml" to COMPOSE_FILE),
+#      (supla-docker: append the files to its COMPOSE_FILE),
 #   3. docker compose up -d, open http://<host>:8080 and pick the coordinator.
 services:
   zigbee2supla:
@@ -35,8 +39,6 @@ services:
     ports:
       # Web interface: first start setup, pairing, device list.
       - "${ZIGBEE2MQTT_PORT:-8080}:8080"
-    devices:
-      - "${ZIGBEE_ADAPTER:-/dev/ttyUSB0}:/dev/zigbee"
     volumes:
       # Network key and paired devices. Back it up!
       - ${ZIGBEE2MQTT_DATA:-./zigbee2mqtt}:/app/data
@@ -44,7 +46,8 @@ services:
     environment:
       TZ: ${TZ:-Europe/Warsaw}
       ZIGBEE2MQTT_CONFIG_MQTT_SERVER: mqtt://mosquitto:1883
-      ZIGBEE2MQTT_CONFIG_SERIAL_PORT: /dev/zigbee
+      # /dev/zigbee is the USB coordinator (docker-compose.zigbee2mqtt-usb.yml).
+      ZIGBEE2MQTT_CONFIG_SERIAL_PORT: ${ZIGBEE2MQTT_SERIAL_PORT:-/dev/zigbee}
       ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: "true"
       ZIGBEE2MQTT_CONFIG_FRONTEND_PORT: "8080"
       # zigbee2supla shows devices unavailable in ZigBee as offline in Supla.

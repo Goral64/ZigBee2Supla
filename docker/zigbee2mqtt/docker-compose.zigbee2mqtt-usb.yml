@@ -1,0 +1,6 @@
+# USB ZigBee coordinator for docker-compose.zigbee2mqtt.yml. Set its path in
+# .env, preferably by id: ZIGBEE_ADAPTER=/dev/serial/by-id/usb-...
+services:
+  zigbee2mqtt:
+    devices:
+      - "${ZIGBEE_ADAPTER:-/dev/ttyUSB0}:/dev/zigbee"
