@@ -20,6 +20,8 @@ być wersją istniejącego wydania.
      przyrostka; trafia do wersji oprogramowania urządzeń w Supli, `z2s X.Y.Z`),
    * `zigbee2supla/config.yaml`: `version: "X.Y.Z"` albo
      `"X.Y.Z-beta.N"`, dokładnie jak tag bez `v`.
+   * `zigbee2supla/CHANGELOG.md`: krótki wpis o tym, co się zmieniło
+     (Home Assistant pokazuje go przy aktualizacji dodatku).
 2. Scal PR i poczekaj, aż obraz `main` zbuduje się na wszystkich
    architekturach (wraz z testami, także na arm/v7 w emulacji, około
    40 min).
