@@ -66,7 +66,8 @@ expect_line "$env" "Z2S_SUPLA_SECURITY_LEVEL=0"
 expect_line "$env" "Z2S_MQTT_HOST="
 expect_no_match "$env" "^Z2S_SUPLA_CA_FILE="
 expect_line "$pkg/.env" \
-  "COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml"
+  "COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml"
+expect_no_match "$pkg/.env" "^ZIGBEE2MQTT_SERIAL_PORT="
 expect_line "$pkg/.env" \
   "ZIGBEE_ADAPTER=$WORK/serial/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus-if00"
 expect_line "$pkg/.z2s-mode" "OWN_COORDINATOR=yes"
@@ -81,7 +82,7 @@ expect_line "$DOCKER_LOG" "$pkg|compose stop zigbee2supla mosquitto zigbee2mqtt"
 
 # --- Supla Cloud + existing zigbee2mqtt, password with special characters --
 pkg=$(new_package mqtt)
-printf '%s\n' 1 svr3.supla.org u@example.com 2 192.168.1.10 1883 \
+printf '%s\n' 1 svr3.supla.org u@example.com 3 192.168.1.10 1883 \
   mqttuser 'p&a/s$s\w' n | "$pkg/z2s.sh" setup >/dev/null 2>&1
 env=$pkg/zigbee2supla.env
 expect_line "$env" "Z2S_MQTT_HOST=192.168.1.10"
@@ -102,24 +103,42 @@ printf '%s\n' "VOLUME_DATA=./var" \
 pkg=$(new_package sd)
 printf '%s\n' 2 "$sd" admin@example.com 1 1 n |
   "$pkg/z2s.sh" setup >/dev/null 2>&1
-expect_line "$sd/.env" "COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml"
+expect_line "$sd/.env" "COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml"
 expect_line "$sd/.env.before-zigbee2supla" \
   "COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml"
 expect_line "$sd/zigbee2supla.env" "Z2S_SUPLA_EMAIL=admin@example.com"
 [ -f "$sd/docker-compose.zigbee2supla.yml" ] || fail "compose file not copied"
 [ -f "$sd/docker-compose.zigbee2mqtt.yml" ] || fail "zigbee2mqtt not copied"
+[ -f "$sd/docker-compose.zigbee2mqtt-usb.yml" ] || fail "zigbee2mqtt-usb not copied"
 : >"$DOCKER_LOG"
 "$pkg/z2s.sh" update >/dev/null
 expect_line "$DOCKER_LOG" "$sd|compose pull zigbee2supla mosquitto zigbee2mqtt"
 expect_line "$DOCKER_LOG" "$sd|compose up -d zigbee2supla mosquitto zigbee2mqtt"
 
+# Setup again with a network coordinator: no USB device any more.
+printf '%s\n' 2 "$sd" admin@example.com 2 192.168.1.50 '' n |
+  "$pkg/z2s.sh" setup >/dev/null 2>&1
+expect_line "$sd/.env" "COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml"
+expect_line "$sd/.env" "ZIGBEE2MQTT_SERIAL_PORT=tcp://192.168.1.50:6638"
+expect_no_match "$sd/.env" "^ZIGBEE_ADAPTER="
+
 # Setup again without own coordinator: zigbee2mqtt leaves COMPOSE_FILE,
 # zigbee2supla is not added twice.
-printf '%s\n' 2 "$sd" admin@example.com 2 mosquitto.lan 1883 '' n |
+printf '%s\n' 2 "$sd" admin@example.com 3 mosquitto.lan 1883 '' n |
   "$pkg/z2s.sh" setup >/dev/null 2>&1
 expect_line "$sd/.env" "COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml"
 expect_line "$sd/zigbee2supla.env" "Z2S_MQTT_HOST=mosquitto.lan"
 expect_line "$sd/zigbee2supla.env" "Z2S_MQTT_USERNAME="
+
+# --- Supla Cloud + network coordinator on another port --------------------
+pkg=$(new_package net)
+printf '%s\n' 1 svr12.supla.org user@example.com 2 10.0.0.7 6653 n |
+  "$pkg/z2s.sh" setup >/dev/null 2>&1
+expect_line "$pkg/.env" \
+  "COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml"
+expect_line "$pkg/.env" "ZIGBEE2MQTT_SERIAL_PORT=tcp://10.0.0.7:6653"
+expect_no_match "$pkg/.env" "ZIGBEE_ADAPTER"
+expect_line "$pkg/.z2s-mode" "OWN_COORDINATOR=yes"
 
 # --- commands before setup -------------------------------------------------
 pkg=$(new_package fresh)
