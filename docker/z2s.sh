@@ -224,12 +224,14 @@ fetch_certificate() {
     die "Przerwano. Skopiuj certyfikat ręcznie do certs/supla-server.crt."
 }
 
-# set_coordinator <compose .env> <USB adapter> <network port>: compose files
-# and coordinator settings for OWN_COORDINATOR (USB when adapter is set).
+# set_coordinator <compose .env> <USB adapter> <network port> <network
+# adapter type>: compose files and coordinator settings for OWN_COORDINATOR
+# (USB when the USB adapter is set, network otherwise).
 set_coordinator() {
-  local file=$1 adapter=$2 serial_port=$3
+  local file=$1 adapter=$2 serial_port=$3 serial_adapter=$4
+  remove_compose_file "$file" docker-compose.zigbee2mqtt-usb.yml
+  remove_compose_file "$file" docker-compose.zigbee2mqtt-network.yml
   if [ "$OWN_COORDINATOR" != yes ]; then
-    remove_compose_file "$file" docker-compose.zigbee2mqtt-usb.yml
     remove_compose_file "$file" docker-compose.zigbee2mqtt.yml
     return
   fi
@@ -238,16 +240,19 @@ set_coordinator() {
     add_compose_file "$file" docker-compose.zigbee2mqtt-usb.yml
     set_env "$file" ZIGBEE_ADAPTER "$adapter"
     comment_env "$file" ZIGBEE2MQTT_SERIAL_PORT
+    comment_env "$file" ZIGBEE2MQTT_SERIAL_ADAPTER
   else
-    remove_compose_file "$file" docker-compose.zigbee2mqtt-usb.yml
+    add_compose_file "$file" docker-compose.zigbee2mqtt-network.yml
     set_env "$file" ZIGBEE2MQTT_SERIAL_PORT "$serial_port"
+    set_env "$file" ZIGBEE2MQTT_SERIAL_ADAPTER "$serial_adapter"
     comment_env "$file" ZIGBEE_ADAPTER
   fi
 }
 
 cmd_setup() {
   check_docker
-  local where source server='' email adapter='' serial_port='' env_file sd_env
+  local where source server='' email adapter='' serial_port='' serial_adapter=''
+  local env_file sd_env
   local mqtt_host='' mqtt_port=1883 mqtt_user='' mqtt_pass=''
 
   echo "${BOLD}Konfiguracja zigbee2supla${NC}"
@@ -283,6 +288,12 @@ cmd_setup() {
   elif [ "$source" = 2 ]; then
     OWN_COORDINATOR=yes
     serial_port="tcp://$(ask "Adres IP koordynatora"):$(ask "Port koordynatora" 6638)"
+    case $(choose "Układ ZigBee w koordynatorze (pokazuje go jego strona WWW):" \
+      "TI CC2652/CC1352, np. SLZB-06, SLZB-06U, SLZB-06P7, UZG-01" \
+      "Silicon Labs EFR32, np. SLZB-06M, SLZB-06MG24") in
+      1) serial_adapter=zstack ;;
+      *) serial_adapter=ember ;;
+    esac
   else
     OWN_COORDINATOR=no
     mqtt_host=$(ask "Adres brokera MQTT, z którego korzysta zigbee2mqtt")
@@ -301,15 +312,16 @@ cmd_setup() {
     [ -f "$env_file" ] || cp supla-docker/zigbee2supla.env.example "$env_file"
     [ -f "$sd_env.before-zigbee2supla" ] || cp "$sd_env" "$sd_env.before-zigbee2supla"
     add_compose_file "$sd_env" docker-compose.zigbee2supla.yml
-    cp docker-compose.zigbee2mqtt.yml docker-compose.zigbee2mqtt-usb.yml "$SUPLA_DOCKER_DIR/"
-    set_coordinator "$sd_env" "$adapter" "$serial_port"
+    cp docker-compose.zigbee2mqtt.yml docker-compose.zigbee2mqtt-usb.yml \
+      docker-compose.zigbee2mqtt-network.yml "$SUPLA_DOCKER_DIR/"
+    set_coordinator "$sd_env" "$adapter" "$serial_port" "$serial_adapter"
   else
     MODE=standalone
     SUPLA_DOCKER_DIR=
     env_file=$PKG_DIR/zigbee2supla.env
     [ -f "$env_file" ] || cp zigbee2supla.env.example "$env_file"
     set_env .env COMPOSE_FILE docker-compose.yml
-    set_coordinator .env "$adapter" "$serial_port"
+    set_coordinator .env "$adapter" "$serial_port" "$serial_adapter"
     set_env "$env_file" Z2S_SUPLA_SERVER "$server"
     if [ "$where" = 1 ]; then
       set_env "$env_file" Z2S_SUPLA_SECURITY_LEVEL 0

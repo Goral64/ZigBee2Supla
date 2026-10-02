@@ -2,15 +2,17 @@
 # without Home Assistant. Works with docker/standalone and docker/supla-docker.
 #
 # Installation (details: docs/docker.md):
-#   1. copy this file (and docker-compose.zigbee2mqtt-usb.yml for a USB
-#      coordinator) next to the zigbee2supla compose file,
+#   1. copy this file and docker-compose.zigbee2mqtt-usb.yml (USB coordinator)
+#      or docker-compose.zigbee2mqtt-network.yml (network coordinator) next to
+#      the zigbee2supla compose file,
 #   2. in .env of that directory (create it for standalone) set the
 #      coordinator and the compose files, e.g. for USB:
 #        ZIGBEE_ADAPTER=/dev/serial/by-id/usb-...
 #        COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml
 #      or for a network coordinator:
 #        ZIGBEE2MQTT_SERIAL_PORT=tcp://192.168.1.50:6638
-#        COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml
+#        ZIGBEE2MQTT_SERIAL_ADAPTER=zstack
+#        COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-network.yml
 #      (supla-docker: append the files to its COMPOSE_FILE),
 #   3. docker compose up -d, open http://<host>:8080 and pick the coordinator.
 services:
@@ -46,8 +48,9 @@ services:
     environment:
       TZ: ${TZ:-Europe/Warsaw}
       ZIGBEE2MQTT_CONFIG_MQTT_SERVER: mqtt://mosquitto:1883
-      # /dev/zigbee is the USB coordinator (docker-compose.zigbee2mqtt-usb.yml).
-      ZIGBEE2MQTT_CONFIG_SERIAL_PORT: ${ZIGBEE2MQTT_SERIAL_PORT:-/dev/zigbee}
+      # USB coordinator from docker-compose.zigbee2mqtt-usb.yml;
+      # docker-compose.zigbee2mqtt-network.yml replaces it.
+      ZIGBEE2MQTT_CONFIG_SERIAL_PORT: /dev/zigbee
       ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: "true"
       ZIGBEE2MQTT_CONFIG_FRONTEND_PORT: "8080"
       # zigbee2supla shows devices unavailable in ZigBee as offline in Supla.

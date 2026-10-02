@@ -269,7 +269,10 @@ ls -l /dev/serial/by-id/
 ```
 
 Koordynator sieciowy ma adres IP i port, zwykle 6638. zigbee2mqtt łączy
-się z nim pod adresem w rodzaju `tcp://192.168.1.50:6638`.
+się z nim pod adresem w rodzaju `tcp://192.168.1.50:6638`. Trzeba też znać
+jego układ (pokazuje go strona WWW koordynatora): TI CC2652/CC1352 to
+adapter `zstack` (np. SLZB-06, SLZB-06U, UZG-01), Silicon Labs EFR32 to
+`ember` (np. SLZB-06M, SLZB-06MG24).
 
 ### Z Supla Cloud
 
@@ -279,6 +282,7 @@ URL=https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker
 curl -LO $URL/standalone/docker-compose.yml
 curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt.yml
 curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt-usb.yml
+curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt-network.yml
 curl -L -o zigbee2supla.env $URL/standalone/zigbee2supla.env.example
 ```
 
@@ -295,7 +299,8 @@ Dla sieciowego:
 
 ```
 ZIGBEE2MQTT_SERIAL_PORT=tcp://192.168.1.50:6638
-COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml
+ZIGBEE2MQTT_SERIAL_ADAPTER=zstack
+COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-network.yml
 ```
 
 i uruchom:
@@ -309,10 +314,11 @@ docker compose up -d
 Najpierw dołącz mostek do supla-docker, jak w
 [Dołączenie do supla-docker](#2-dołączenie-do-supla-docker), ale pola
 `Z2S_MQTT_*` w `zigbee2supla.env` zostaw puste. Następnie w katalogu
-supla-docker pobierz `docker-compose.zigbee2mqtt.yml` i, dla koordynatora
-USB, `docker-compose.zigbee2mqtt-usb.yml` (jak wyżej). W `.env` supla-docker
-dopisz te pliki na końcu `COMPOSE_FILE` i dodaj linię z koordynatorem,
-np. dla USB:
+supla-docker pobierz `docker-compose.zigbee2mqtt.yml` i plik dla swojego
+koordynatora: `docker-compose.zigbee2mqtt-usb.yml` albo
+`docker-compose.zigbee2mqtt-network.yml` (jak wyżej). W `.env` supla-docker
+dopisz te pliki na końcu `COMPOSE_FILE` i dodaj ustawienia koordynatora
+jak wyżej, np. dla USB:
 
 ```
 COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml
@@ -327,10 +333,10 @@ w kółko `Connection refused`. Wtedy wystarczy `docker restart supla-server`.
 
 1. Otwórz `http://<adres maszyny>:8080`. zigbee2mqtt pokaże formularz
    pierwszego uruchomienia.
-2. Wybierz rodzaj koordynatora (np. `zstack` dla SONOFF ZBDongle-P
-   i SLZB-06, `ember` dla ZBDongle-E i SLZB-06M, `deconz` dla ConBee).
-   Port i MQTT są już
-   ustawione, nie zmieniaj ich. W „Closest WiFi Channel” wpisz kanał
+2. Dla koordynatora USB wybierz jego rodzaj (np. `zstack` dla SONOFF
+   ZBDongle-P, `ember` dla ZBDongle-E, `deconz` dla ConBee). Koordynatora
+   sieciowego nie ma na liście „Devices found”, ale jego adres i rodzaj
+   są już ustawione. Portu i MQTT nie zmieniaj. W „Closest WiFi Channel” wpisz kanał
    swojej sieci Wi-Fi 2,4 GHz, a zigbee2mqtt dobierze kanał ZigBee,
    który jej nie przeszkadza. Kanału ZigBee nie da się później łatwo
    zmienić.

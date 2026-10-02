@@ -19,7 +19,8 @@ install -m 755 "$ROOT/docker/z2s.sh" "$PKG/z2s.sh"
 install -m 644 "$ROOT/docker/standalone/docker-compose.yml" \
   "$ROOT/docker/standalone/zigbee2supla.env.example" \
   "$ROOT/docker/zigbee2mqtt/docker-compose.zigbee2mqtt.yml" \
-  "$ROOT/docker/zigbee2mqtt/docker-compose.zigbee2mqtt-usb.yml" "$PKG/"
+  "$ROOT/docker/zigbee2mqtt/docker-compose.zigbee2mqtt-usb.yml" \
+  "$ROOT/docker/zigbee2mqtt/docker-compose.zigbee2mqtt-network.yml" "$PKG/"
 install -m 644 "$ROOT/docker/supla-docker/docker-compose.zigbee2supla.yml" \
   "$ROOT/docker/supla-docker/zigbee2supla.env.example" "$PKG/supla-docker/"
 
