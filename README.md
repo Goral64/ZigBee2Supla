@@ -164,10 +164,12 @@ w sieci ponad 100 urządzeń:
 
 Czujniki temperatury, wilgotności i ciśnienia, piloty wieloprzyciskowe
 i czujniki dymu, gazu i CO są sprawdzone tylko testami, bez prawdziwych
-urządzeń. Sprawdzone sposoby uruchomienia: kontener Docker (osobna
-maszyna) i dodatek Home Assistant zainstalowany lokalnie; dodatek
-z repozytorium i usługa w supla-docker są przygotowane, ale testowane
-tylko częściowo.
+urządzeń.
+
+Sprawdzone sposoby uruchomienia: dodatek Home Assistant (z repozytorium),
+kontener Docker na osobnej maszynie, usługa w supla-docker oraz zestaw
+z własnym koordynatorem instalowany przez `z2s.sh`, z ConBee II (USB)
+i SLZB-06U (sieciowym), zarówno z Supla Cloud, jak i z supla-docker.
 
 **Jeszcze nie ma:** ściemniania i koloru świateł, rolet, zamków,
 wentylatorów, harmonogramu tygodniowego Supli dla termostatów (działa
