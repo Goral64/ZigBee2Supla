@@ -1,5 +1,14 @@
 # Zmiany
 
+## 0.4.0-beta.1
+
+- Urządzenia można brać z ZHA (integracja ZigBee w Home Assistant)
+  zamiast z zigbee2mqtt: opcja `source` ustawiona na `zha`. MQTT nie jest
+  wtedy potrzebne. Opis: docs/zha.md w repozytorium.
+- Dodatek nie wymaga już dodatku Mosquitto, jeśli urządzenia są w ZHA.
+- W Dockerze kreator `z2s.sh` pyta też o ZHA.
+- Nazwa mostka: Zigbee to Supla bridge.
+
 ## 0.3.0-beta.3
 
 - Nowy sposób instalacji w Dockerze, także bez Home Assistanta: skrypt
