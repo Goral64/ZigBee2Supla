@@ -77,6 +77,32 @@ TEST_F(ConfigTest, MqttClientIdCanBeSet) {
   EXPECT_EQ(config.mqtt.clientId, "z2s-test");
 }
 
+TEST_F(ConfigTest, ZhaSourceNeedsHomeAssistant) {
+  env_ = {{"Z2S_SUPLA_SERVER", "s"}, {"Z2S_SUPLA_EMAIL", "a@b.pl"}};
+  AppConfig config;
+  std::string error;
+  ASSERT_TRUE(load("", &config, &error)) << error;
+  EXPECT_EQ(config.source, "z2m");
+
+  env_["Z2S_SOURCE"] = "deconz";
+  EXPECT_FALSE(load("", &config, &error));
+  EXPECT_NE(error.find("source"), std::string::npos);
+
+  env_["Z2S_SOURCE"] = "zha";
+  EXPECT_FALSE(load("", &config, &error));
+  EXPECT_NE(error.find("ha_websocket_url"), std::string::npos);
+  env_["Z2S_HA_WEBSOCKET_URL"] = "ws://ha.local:8123/api/websocket";
+  EXPECT_FALSE(load("", &config, &error));
+  EXPECT_NE(error.find("ha_token"), std::string::npos);
+  env_["Z2S_HA_TOKEN"] = "t";
+  ASSERT_TRUE(load("", &config, &error)) << error;
+  EXPECT_EQ(config.source, "zha");
+  EXPECT_EQ(config.zha.websocketUrl, "ws://ha.local:8123/api/websocket");
+  EXPECT_EQ(config.zha.token, "t");
+  // The duplicates option is independent of the source.
+  EXPECT_FALSE(config.ha.enabled);
+}
+
 TEST_F(ConfigTest, EnvironmentOnlyWithoutFile) {
   env_ = {{"Z2S_SUPLA_SERVER", "supla-server"},
           {"Z2S_SUPLA_EMAIL", "a@b.pl"},

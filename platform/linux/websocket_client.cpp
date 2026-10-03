@@ -248,6 +248,14 @@ int WebSocketClient::readSome(void *data, size_t len, int timeoutMs) {
   return static_cast<int>(::recv(fd_, data, len, 0));
 }
 
+bool WebSocketClient::waitReadable(int timeoutMs) {
+  if (fd_ < 0) return false;
+  if (!pending_.empty()) return true;
+  if (ssl_ != nullptr && SSL_pending(ssl_) > 0) return true;
+  pollfd pfd{fd_, POLLIN, 0};
+  return ::poll(&pfd, 1, timeoutMs) > 0;
+}
+
 bool WebSocketClient::readExact(void *data, size_t len, int timeoutMs) {
   char *p = static_cast<char *>(data);
   size_t fromPending = std::min(len, pending_.size());

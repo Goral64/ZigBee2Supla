@@ -30,6 +30,7 @@ struct Option {
 
 const std::vector<Option> &options() {
   static const std::vector<Option> kOptions = {
+      {"source", OptionType::String},
       {"supla_server", OptionType::String},
       {"supla_email", OptionType::String},
       {"supla_port", OptionType::Int},
@@ -302,6 +303,10 @@ bool loadConfig(const std::string &path, const EnvLookup &env,
     config->ha.enabled = j.value("ha_disable_supla_duplicates", false);
     config->ha.websocketUrl = j.value("ha_websocket_url", "");
     config->ha.token = j.value("ha_token", "");
+
+    config->source = j.value("source", "z2m");
+    config->zha.websocketUrl = config->ha.websocketUrl;
+    config->zha.token = config->ha.token;
   } catch (const std::exception &e) {
     *error = std::string("invalid option type: ") + e.what();
     return false;
@@ -330,6 +335,23 @@ bool loadConfig(const std::string &path, const EnvLookup &env,
       config->tls.caFile.empty()) {
     *error = "supla_ca_file is required for supla_security_level 1 and 3";
     return false;
+  }
+  if (config->source != "z2m" && config->source != "zha") {
+    *error = "source must be z2m or zha";
+    return false;
+  }
+  if (config->source == "zha") {
+    WebSocketClient::Url url;
+    if (!WebSocketClient::parseUrl(config->ha.websocketUrl, &url)) {
+      *error =
+          "source zha needs ha_websocket_url, a ws:// or wss:// URL, e.g. "
+          "ws://192.168.1.10:8123/api/websocket";
+      return false;
+    }
+    if (config->ha.token.empty()) {
+      *error = "ha_token is required for source zha";
+      return false;
+    }
   }
   if (config->ha.enabled) {
     WebSocketClient::Url url;

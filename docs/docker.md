@@ -155,6 +155,7 @@ wielkimi literami. Pełna lista: `docker run --rm <obraz> -h`.
 
 | Zmienna | Domyślnie | Opis |
 |---|---|---|
+| `Z2S_SOURCE` | `z2m` | `z2m` (zigbee2mqtt) albo `zha` (ZHA w Home Assistant, [zha.md](zha.md)) |
 | `Z2S_SUPLA_SERVER` | – | adres serwera Supli |
 | `Z2S_SUPLA_EMAIL` | – | e-mail konta Supla |
 | `Z2S_SUPLA_PORT` | `2016` | port serwera |
@@ -169,7 +170,7 @@ wielkimi literami. Pełna lista: `docker run --rm <obraz> -h`.
 | `Z2S_MAX_PARALLEL_CONNECTS` | `4` | ile urządzeń łączy się jednocześnie |
 | `Z2S_LOG_LEVEL` | `info` | `error`, `warning`, `info`, `debug`, `verbose` |
 | `Z2S_HA_DISABLE_SUPLA_DUPLICATES` | `false` | wyłączaj w HA duplikaty z discovery Supli ([home-assistant.md](home-assistant.md)) |
-| `Z2S_HA_WEBSOCKET_URL` | | np. `ws://192.168.1.10:8123/api/websocket` |
+| `Z2S_HA_WEBSOCKET_URL` | | np. `ws://192.168.1.10:8123/api/websocket` (dla `zha` i duplikatów) |
 | `Z2S_HA_TOKEN` | | token dostępu HA |
 | `Z2S_STATE_DIR` | `/data` (w obrazie) | katalog na `identities.json` |
 | `TZ` | `Europe/Warsaw` (w obrazie) | strefa czasowa znaczników czasu w logu, nazwa z bazy tz, np. `Europe/London` albo `UTC` |

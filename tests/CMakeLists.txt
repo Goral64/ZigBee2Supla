@@ -12,11 +12,13 @@ add_executable(z2s_tests
   openssl_transport_test.cpp
   z2m_mapper_test.cpp
   z2m_backend_test.cpp
+  zha_mapper_test.cpp
+  zha_backend_test.cpp
   session_test.cpp
   fake_supla_server.cpp
 )
 target_link_libraries(z2s_tests PRIVATE
-  z2s_core z2s_backend_z2m z2s_platform_linux z2s_ha ${YAML_CPP_LIB}
+  z2s_core z2s_backend_z2m z2s_backend_zha z2s_platform_linux z2s_ha ${YAML_CPP_LIB}
   GTest::gtest_main)
 target_include_directories(z2s_tests PRIVATE ${CMAKE_SOURCE_DIR}/apps/linux)
 target_compile_definitions(z2s_tests PRIVATE

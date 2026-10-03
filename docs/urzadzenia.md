@@ -4,7 +4,7 @@ Jak mostek przenosi urządzenia z zigbee2mqtt do Supli. Mapowanie odbywa
 się na podstawie opisu urządzenia w zigbee2mqtt (`exposes`
 z `zigbee2mqtt/bridge/devices`), więc nie zależy od producenta ani modelu:
 urządzenie obsługiwane przez zigbee2mqtt dostaje kanały według tego, co
-udostępnia.
+udostępnia. Przy ZHA zasady są te same, różnice opisuje [zha.md](zha.md).
 
 ## Spis kanałów
 

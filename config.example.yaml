@@ -9,6 +9,10 @@ supla_email: twoj@email.pl
 # serwera (wtedy także supla_ca_file)
 supla_security_level: 0
 
+# Skąd brać urządzenia: z2m (zigbee2mqtt) albo zha (ZHA w Home Assistant,
+# wtedy także ha_websocket_url i ha_token, zob. docs/zha.md).
+source: z2m
+
 # --- zigbee2mqtt (MQTT) -----------------------------------------------------
 mqtt_host: localhost
 mqtt_port: 1883
@@ -22,7 +26,7 @@ state_dir: .
 log_level: info          # error, warning, info, debug, verbose
 max_parallel_connects: 4
 
-# Tylko te urządzenia (nazwa z zigbee2mqtt albo adres IEEE).
+# Tylko te urządzenia (nazwa urządzenia albo adres IEEE).
 # Pusta lista = wszystkie obsługiwane.
 include: []
 #  - Lampa salon

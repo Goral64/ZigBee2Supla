@@ -82,6 +82,16 @@ target_include_directories(z2s_backend_z2m PUBLIC backends/z2m ${MOSQUITTO_INCLU
 target_link_libraries(z2s_backend_z2m PUBLIC z2s_core ${MOSQUITTO_LIB} Threads::Threads)
 target_compile_options(z2s_backend_z2m PRIVATE -Wall -Wextra)
 
+# --- ZHA backend (Home Assistant WebSocket API) ------------------------------
+add_library(z2s_backend_zha STATIC
+  backends/zha/zha_mapper.cpp
+  backends/zha/zha_backend.cpp
+)
+target_include_directories(z2s_backend_zha PUBLIC backends/zha)
+target_link_libraries(z2s_backend_zha PUBLIC z2s_core z2s_platform_linux
+  Threads::Threads)
+target_compile_options(z2s_backend_zha PRIVATE -Wall -Wextra)
+
 # --- Linux application -------------------------------------------------------
 add_executable(zigbee2supla
   apps/linux/main.cpp
@@ -90,7 +100,7 @@ add_executable(zigbee2supla
 )
 target_include_directories(zigbee2supla PRIVATE apps/linux)
 target_link_libraries(zigbee2supla PRIVATE z2s_core z2s_platform_linux z2s_backend_z2m
-  z2s_ha ${YAML_CPP_LIB})
+  z2s_backend_zha z2s_ha ${YAML_CPP_LIB})
 target_compile_options(zigbee2supla PRIVATE -Wall -Wextra)
 install(TARGETS zigbee2supla RUNTIME DESTINATION bin)
 

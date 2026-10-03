@@ -9,13 +9,18 @@
 #include "openssl_transport.h"
 #include "z2m_backend.h"
 #include "z2s/gateway.h"
+#include "zha_backend.h"
 
 namespace z2s {
 
 struct AppConfig {
   GatewayConfig gateway;
   TlsConfig tls;
+  // Source of the devices: "z2m" (zigbee2mqtt over MQTT) or "zha" (ZHA in
+  // Home Assistant, over its WebSocket API).
+  std::string source = "z2m";
   z2m::MqttConfig mqtt;
+  zha::HaConfig zha;
   HaSyncConfig ha;
   std::string stateDir = ".";
   std::string logLevel = "info";
