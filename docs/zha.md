@@ -24,6 +24,21 @@ Token tworzy się w HA w profilu użytkownika (Bezpieczeństwo → Tokeny
 dostępu o długim terminie ważności), na koncie administratora, bo mostek
 czyta rejestr urządzeń.
 
+Instalując mostek w Dockerze skryptem `z2s.sh` (README, „Szybki start”),
+wybierz na pytanie „Skąd brać urządzenia ZigBee?” odpowiedź „ZHA w Home
+Assistant”. Skrypt zapyta o adres HA i token. Przy ręcznej instalacji te
+same ustawienia wpisuje się do `zigbee2supla.env`:
+
+```
+Z2S_SOURCE=zha
+Z2S_HA_WEBSOCKET_URL=ws://192.168.1.10:8123/api/websocket
+Z2S_HA_TOKEN=<token>
+```
+
+Aktualizacja mostka nie zależy od źródła: dodatek aktualizuje się w HA,
+Docker przez `./z2s.sh update` albo `docker compose pull && docker compose
+up -d`.
+
 ## Co trafia do Supli
 
 To samo co przy zigbee2mqtt ([urzadzenia.md](urzadzenia.md)), tylko
@@ -54,6 +69,18 @@ Różnice względem zigbee2mqtt:
 * przycisk bez wyzwalaczy w ZHA (brak opisu urządzenia w ZHA) nie dostaje
   kanału,
 * nazwy urządzeń są takie jak w HA.
+
+## Zmiana źródła
+
+W dodatku zmienia się opcję `source` i uruchamia dodatek ponownie.
+W Dockerze wystarczy jeszcze raz `./z2s.sh setup` z inną odpowiedzią albo
+zmiana `Z2S_SOURCE` (i adresu HA z tokenem) w `zigbee2supla.env`
+i `docker compose up -d`. `identities.json` zostaje ten sam.
+
+Mostek nie przenosi urządzeń między ZHA a zigbee2mqtt. Koordynator może
+obsługiwać tylko jeden z nich, więc przy przesiadce urządzenia paruje się
+od nowa w nowym programie. Co wtedy dzieje się z nimi w Supli, opisuje
+rozdział niżej.
 
 ## Przejście między ZHA a zigbee2mqtt
 

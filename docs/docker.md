@@ -10,7 +10,7 @@ scenariusze:
 | Scenariusz | Pliki | Rozdział |
 |---|---|---|
 | **obok supla-docker**: mostek jako usługa lokalnego serwera Supli na tej samej maszynie | `docker/supla-docker/` | 2 |
-| **samodzielny**: mostek na osobnej maszynie; serwer Supli (lokalny lub Supla Cloud) i HA z zigbee2mqtt na innych | `docker/standalone/` | 3 |
+| **samodzielny**: mostek na osobnej maszynie; serwer Supli (lokalny lub Supla Cloud) i HA z zigbee2mqtt albo ZHA na innych | `docker/standalone/` | 3 |
 
 Trzecią formą dystrybucji jest dodatek Home Assistant (katalog
 `zigbee2supla/`, opis w README).
@@ -64,6 +64,8 @@ i łączy się z serwerem po nazwie `supla-server`.
 2. Uzupełnij `zigbee2supla.env`: co najmniej `Z2S_SUPLA_EMAIL` (konto
    w Twojej lokalnej Supla Cloud) i dane brokera MQTT, z którego korzysta
    zigbee2mqtt (`Z2S_MQTT_HOST`, `Z2S_MQTT_USERNAME`, `Z2S_MQTT_PASSWORD`).
+   Przy ZHA zamiast MQTT: `Z2S_SOURCE=zha`, `Z2S_HA_WEBSOCKET_URL`
+   i `Z2S_HA_TOKEN` ([zha.md](zha.md)).
 3. W pliku `.env` supla-docker dopisz plik compose do `COMPOSE_FILE`:
    ```
    COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml
@@ -106,7 +108,10 @@ LAN lub internet.
 2. `cp zigbee2supla.env.example zigbee2supla.env` i uzupełnij:
    * `Z2S_SUPLA_SERVER`, `Z2S_SUPLA_EMAIL`,
    * `Z2S_MQTT_HOST` = adres maszyny z HA, `Z2S_MQTT_USERNAME`,
-     `Z2S_MQTT_PASSWORD` (użytkownik dodany w dodatku Mosquitto).
+     `Z2S_MQTT_PASSWORD` (użytkownik dodany w dodatku Mosquitto),
+   * albo, przy ZHA, `Z2S_SOURCE=zha`, `Z2S_HA_WEBSOCKET_URL` (np.
+     `ws://192.168.1.10:8123/api/websocket`) i `Z2S_HA_TOKEN`
+     ([zha.md](zha.md)).
 3. Certyfikat serwera:
    * **Supla Cloud**: nic nie rób (`Z2S_SUPLA_SECURITY_LEVEL=0`).
    * **Lokalny serwer z supla-docker na innej maszynie**: ustaw
@@ -132,8 +137,8 @@ LAN lub internet.
    urządzeń.
 
 Wymagania sieciowe: maszyna z mostkiem musi mieć połączenie wychodzące do
-brokera MQTT (domyślnie port 1883) i do serwera Supli (port 2016). Nie są
-potrzebne żadne porty przychodzące.
+brokera MQTT (domyślnie port 1883; przy ZHA do Home Assistanta, port 8123)
+i do serwera Supli (port 2016). Nie są potrzebne żadne porty przychodzące.
 
 Bez compose, samym `docker run`:
 
@@ -220,6 +225,8 @@ kontenera) skopiuj ten plik, zanim nowa instancja uruchomi się pierwszy raz.
 | `Registration failed: device limit exceeded` | zwiększ limit urządzeń na koncie |
 | `MQTT: connection refused` | sprawdź `Z2S_MQTT_*`; broker w HA musi być osiągalny z hosta Dockera |
 | `zigbee2mqtt: 0 of N device(s) can be bridged` | urządzenia nie mają obsługiwanych funkcji (lista w README) albo zły `Z2S_Z2M_BASE_TOPIC` |
+| `ZHA: the ZHA integration is not loaded` | Home Assistant dopiero startuje albo nie ma w nim ZHA; mostek ponawia próbę |
+| `ZHA: Home Assistant refused the access token` | zły `Z2S_HA_TOKEN` albo token usunięty w HA |
 | `Cannot resolve svr….supla.org: Try again` | kontener nie rozwiązuje nazw, choć host je rozwiązuje; patrz niżej |
 
 ### Kontener nie rozwiązuje nazwy serwera Supli

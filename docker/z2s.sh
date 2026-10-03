@@ -254,6 +254,7 @@ cmd_setup() {
   local where source server='' email adapter='' serial_port='' serial_adapter=''
   local env_file sd_env
   local mqtt_host='' mqtt_port=1883 mqtt_user='' mqtt_pass=''
+  local ha_url='' ha_token='' ha_duplicates=''
 
   echo "${BOLD}Konfiguracja zigbee2supla${NC}"
   echo
@@ -281,7 +282,8 @@ cmd_setup() {
   source=$(choose "Skąd brać urządzenia ZigBee?" \
     "koordynator USB podłączony do tej maszyny (zigbee2mqtt zostanie zainstalowany)" \
     "koordynator sieciowy, np. SLZB-06 (zigbee2mqtt zostanie zainstalowany)" \
-    "zigbee2mqtt, który już działa (np. w Home Assistant)")
+    "zigbee2mqtt, który już działa (np. w Home Assistant)" \
+    "ZHA w Home Assistant (bez MQTT)")
   if [ "$source" = 1 ]; then
     OWN_COORDINATOR=yes
     adapter=$(pick_adapter)
@@ -294,6 +296,19 @@ cmd_setup() {
       1) serial_adapter=zstack ;;
       *) serial_adapter=ember ;;
     esac
+  elif [ "$source" = 4 ]; then
+    OWN_COORDINATOR=no
+    ha_url="ws://$(ask "Adres Home Assistant (IP albo nazwa)"):$(ask "Port Home Assistant" 8123)/api/websocket"
+    echo "Token: w HA profil użytkownika (administratora) -> Bezpieczeństwo ->" >&2
+    echo "Tokeny dostępu o długim terminie ważności." >&2
+    while [ -z "$ha_token" ]; do
+      ha_token=$(ask_secret "Token dostępu Home Assistant")
+    done
+    if yes_no "Wyłączać w Home Assistant kopie urządzeń z Supli (docs/home-assistant.md)?"; then
+      ha_duplicates=true
+    else
+      ha_duplicates=false
+    fi
   else
     OWN_COORDINATOR=no
     mqtt_host=$(ask "Adres brokera MQTT, z którego korzysta zigbee2mqtt")
@@ -337,6 +352,15 @@ cmd_setup() {
   set_env "$env_file" Z2S_MQTT_PORT "$mqtt_port"
   set_env "$env_file" Z2S_MQTT_USERNAME "$mqtt_user"
   set_env "$env_file" Z2S_MQTT_PASSWORD "$mqtt_pass"
+  if [ "$source" = 4 ]; then
+    set_env "$env_file" Z2S_SOURCE zha
+    set_env "$env_file" Z2S_HA_WEBSOCKET_URL "$ha_url"
+    set_env "$env_file" Z2S_HA_TOKEN "$ha_token"
+    set_env "$env_file" Z2S_HA_DISABLE_SUPLA_DUPLICATES "$ha_duplicates"
+  else
+    # The address and token of HA may stay for the duplicates option.
+    set_env "$env_file" Z2S_SOURCE z2m
+  fi
   chmod 600 "$env_file"
 
   cat >"$MODE_FILE" <<EOF

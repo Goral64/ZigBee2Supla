@@ -94,6 +94,25 @@ expect_no_match "$pkg/.env" "ZIGBEE_ADAPTER"
 "$pkg/z2s.sh" stop >/dev/null
 expect_line "$DOCKER_LOG" "$pkg|compose stop zigbee2supla"
 
+# --- Supla Cloud + ZHA in Home Assistant ----------------------------------
+pkg=$(new_package zha)
+printf '%s\n' 1 svr3.supla.org u@example.com 4 192.168.1.10 '' 'tok$en' n n |
+  "$pkg/z2s.sh" setup >/dev/null 2>&1
+env=$pkg/zigbee2supla.env
+expect_line "$env" "Z2S_SOURCE=zha"
+expect_line "$env" "Z2S_HA_WEBSOCKET_URL=ws://192.168.1.10:8123/api/websocket"
+expect_line "$env" 'Z2S_HA_TOKEN=tok$en'
+expect_line "$env" "Z2S_HA_DISABLE_SUPLA_DUPLICATES=false"
+expect_line "$env" "Z2S_MQTT_HOST="
+expect_line "$pkg/.env" "COMPOSE_FILE=docker-compose.yml"
+expect_line "$pkg/.z2s-mode" "OWN_COORDINATOR=no"
+# Back to zigbee2mqtt: the source changes, the HA address stays.
+printf '%s\n' 1 svr3.supla.org u@example.com 3 192.168.1.10 1883 '' n |
+  "$pkg/z2s.sh" setup >/dev/null 2>&1
+expect_line "$env" "Z2S_SOURCE=z2m"
+expect_line "$env" "Z2S_MQTT_HOST=192.168.1.10"
+expect_line "$env" "Z2S_HA_WEBSOCKET_URL=ws://192.168.1.10:8123/api/websocket"
+
 # --- supla-docker on this machine ------------------------------------------
 sd=$WORK/supla-docker
 mkdir -p "$sd"
