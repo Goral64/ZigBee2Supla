@@ -66,8 +66,9 @@ pojawią się w Supli jako nowe.
    `https://github.com/Goral64/ZigBee2Supla`.
 2. Zainstaluj dodatek „Zigbee2Supla”.
 3. W konfiguracji ustaw `supla_server` (np. `svr12.supla.org`, adres
-   widoczny w Supla Cloud) i `supla_email`. Broker MQTT jest brany
-   automatycznie z dodatku Mosquitto.
+   widoczny w Supla Cloud) i `supla_email`. Przy zigbee2mqtt broker MQTT
+   jest brany automatycznie z dodatku Mosquitto. Jeśli urządzenia ZigBee
+   masz w ZHA, ustaw jeszcze `source` na `zha` ([docs/zha.md](docs/zha.md)).
 4. Przeczytaj [Przed pierwszym uruchomieniem](#przed-pierwszym-uruchomieniem)
    i uruchom dodatek.
 
@@ -87,7 +88,8 @@ cd zigbee2supla
 
 Skrypt zapyta o serwer Supli, e-mail konta i o to, skąd brać urządzenia:
 z własnego koordynatora, USB albo sieciowego (wtedy sam doda
-zigbee2mqtt), albo z zigbee2mqtt, który już masz, np. w Home Assistant.
+zigbee2mqtt), z zigbee2mqtt, który już masz, np. w Home Assistant, albo
+z ZHA w Home Assistant.
 Potem uruchomi mostek. Do supla-docker dołączy się sam, wystarczy
 wskazać jego katalog.
 
@@ -148,9 +150,9 @@ Co minutę (i przy każdej zmianie) mostek wypisuje stan, np.:
 Status: 101 ZigBee device(s), 101 bridged: 66 connected to Supla, 35 offline in ZigBee, 0 connecting or failed
 ```
 
-czyli: urządzenia w zigbee2mqtt, z nich mostkowane do Supli, a mostkowane
-dzielą się na połączone z Suplą, niedostępne w sieci ZigBee (celowo
-rozłączone) i łączące się albo odrzucone przez serwer.
+czyli: urządzenia w zigbee2mqtt (albo ZHA), z nich mostkowane do Supli,
+a mostkowane dzielą się na połączone z Suplą, niedostępne w sieci ZigBee
+(celowo rozłączone) i łączące się albo odrzucone przez serwer.
 
 ## Co jest sprawdzone
 
@@ -189,6 +191,8 @@ program samego urządzenia), zerowania licznika energii.
 | `device limit exceeded` | Limit urządzeń na koncie Supli; zwiększ go albo ogranicz urządzenia opcją `include`/`exclude`. |
 | `channel conflict` | Urządzenie w Supli ma inne kanały niż teraz (np. po skasowaniu `identities.json`). Przywróć `identities.json` z kopii; w ostateczności usuń urządzenie w Supla Cloud. |
 | urządzenia co chwilę rozłączają się i łączą | Dwa mostki z tym samym `identities.json`. Zostaw jeden. |
+| `ZHA: the ZHA integration is not loaded` | Home Assistant dopiero startuje albo nie ma w nim ZHA; mostek ponawia próbę. |
+| `ZHA: Home Assistant refused the access token` | Zły token w `ha_token` albo token usunięty w HA; utwórz nowy na koncie administratora. |
 | `Cannot resolve …` w Dockerze | Kontener nie ma DNS; zob. [docs/docker.md, rozdział 7](docs/docker.md#7-rozwiązywanie-problemów). |
 | urządzenie nie pojawia się w Supli | Sprawdź w logu listę pominiętych urządzeń i [docs/urzadzenia.md](docs/urzadzenia.md#pomijane-urządzenia); urządzenie niedostępne w ZigBee łączy się z Suplą dopiero po powrocie do sieci. |
 | zmiana w Supli widoczna z opóźnieniem | Strona Supla Cloud odświeża stany co kilka sekund; termostaty Tuya potwierdzają zmiany po 10–25 s. Mostek przekazuje polecenia w milisekundach. |

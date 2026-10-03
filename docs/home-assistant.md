@@ -6,14 +6,14 @@ Gdy w Supla Cloud jest włączony **broker MQTT**, serwer Supli publikuje
 MQTT discovery dla Home Assistant **dla każdego kanału** na koncie. HA dodaje
 wtedy automatycznie wszystkie urządzenia Supli.
 
-Urządzenia ZigBee trafiają do HA również z zigbee2mqtt. Gdy zigbee2supla
-zarejestruje je w Supli, pojawią się w HA **drugi raz**, tym razem jako
+Urządzenia ZigBee są w HA już z zigbee2mqtt albo z ZHA. Gdy zigbee2supla
+zarejestruje je w Supli, pojawią się w HA drugi raz, tym razem jako
 urządzenia Supli:
 
 ```
-zigbee2mqtt ──discovery──► HA: „Salon/czujnik” (zigbee2mqtt)   ✔ właściwe
+zigbee2mqtt / ZHA ───────► HA: „Salon/czujnik”           (właściwe)
      │
-     └─► zigbee2supla ──► Supla ──discovery──► HA: „Salon/czujnik” (Supla)   ✘ duplikat
+     └─► zigbee2supla ──► Supla ──discovery──► HA: „Salon/czujnik” (Supla, duplikat)
 ```
 
 W Supli nie ma dziś ustawienia, które wyłączałoby discovery dla
@@ -30,7 +30,7 @@ w rejestrze urządzeń HA te urządzenia Supli, które pochodzą od mostka:
 * rozpoznaje je jednoznacznie: identyfikator `supla-iodevice-<id>`
   (discovery Supli) i wersja oprogramowania zaczynająca się od `z2s `
   (wysyła ją zigbee2supla),
-* **nie rusza** pozostałych urządzeń Supli ani urządzeń z zigbee2mqtt,
+* **nie rusza** pozostałych urządzeń Supli ani urządzeń z zigbee2mqtt i ZHA,
 * każde wyłączone urządzenie zapamiętuje w `ha_disabled_devices.json`
   (w katalogu stanu). Jeśli sam włączysz je z powrotem w HA, mostek go
   ponownie nie wyłączy,
