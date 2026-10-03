@@ -5,7 +5,7 @@ version: "0.3.0-beta.3"
 image: ghcr.io/goral64/zigbee2supla-addon-{arch}
 slug: zigbee2supla
 description: >-
-  Zigbee2MQTT to Supla bridge: każde urządzenie ZigBee z zigbee2mqtt
+  Zigbee to Supla bridge: każde urządzenie ZigBee z zigbee2mqtt albo ZHA
   widoczne w Supli jako osobne urządzenie
 url: https://github.com/Goral64/ZigBee2Supla
 arch:
@@ -16,9 +16,9 @@ init: false
 startup: application
 boot: auto
 services:
-  - mqtt:need
-# Access to the Home Assistant API (device registry) for
-# ha_disable_supla_duplicates.
+  - mqtt:want
+# Access to the Home Assistant API: devices of ZHA (source: zha) and the
+# device registry for ha_disable_supla_duplicates.
 homeassistant_api: true
 # identities.json (GUID/AuthKey of all devices) is stored in the add-on
 # config directory, visible in HA as /addon_configs/<slug>/ (Samba, File
@@ -26,6 +26,7 @@ homeassistant_api: true
 map:
   - addon_config:rw
 options:
+  source: z2m
   supla_server: ""
   supla_email: ""
   supla_security_level: 0
@@ -36,6 +37,7 @@ options:
   include: []
   exclude: []
 schema:
+  source: list(z2m|zha)
   supla_server: str
   supla_email: email
   supla_security_level: int(0,3)

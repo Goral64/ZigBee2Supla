@@ -1,0 +1,1065 @@
+{
+ "device_registry": [
+  {
+   "id": "4a66bb1caf3cb74a6fe3dd4f732ca07f",
+   "identifiers": [
+    [
+     "zha",
+     "00:12:4b:00:25:7b:f3:28"
+    ]
+   ],
+   "manufacturer": "Texas Instruments",
+   "model": "CC2652",
+   "name": "Texas Instruments CC2652",
+   "name_by_user": null,
+   "sw_version": null,
+   "disabled_by": null,
+   "via_device_id": null
+  },
+  {
+   "id": "9f04b91f3c794b14e7350006b1b10d41",
+   "identifiers": [
+    [
+     "zha",
+     "00:12:4b:00:24:c0:8e:dc"
+    ]
+   ],
+   "manufacturer": "SONOFF",
+   "model": "01MINIZB",
+   "name": "SONOFF 01MINIZB",
+   "name_by_user": null,
+   "sw_version": "0x00002000",
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "01f7d995e3e9f49188a12da83a02098c",
+   "identifiers": [
+    [
+     "zha",
+     "a4:c1:38:97:bc:9d:10:29"
+    ]
+   ],
+   "manufacturer": "_TZ3210_2putqrmw",
+   "model": "TS011F",
+   "name": "_TZ3210_2putqrmw TS011F",
+   "name_by_user": null,
+   "sw_version": "0x00000053",
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "294e533971b30e297e5714887fbb663e",
+   "identifiers": [
+    [
+     "zha",
+     "00:12:4b:00:22:e9:5c:cf"
+    ]
+   ],
+   "manufacturer": "eWeLink",
+   "model": "MS01",
+   "name": "eWeLink MS01",
+   "name_by_user": null,
+   "sw_version": null,
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "e0dd29b48628e6c9470d34a9ee6fbba0",
+   "identifiers": [
+    [
+     "zha",
+     "00:12:4b:00:22:ea:20:33"
+    ]
+   ],
+   "manufacturer": "eWeLink",
+   "model": "DS01",
+   "name": "eWeLink DS01",
+   "name_by_user": null,
+   "sw_version": null,
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+   "identifiers": [
+    [
+     "zha",
+     "a4:c1:38:5d:60:71:15:bd"
+    ]
+   ],
+   "manufacturer": "_TZ3000_8rppvwda",
+   "model": "TS0041",
+   "name": "_TZ3000_8rppvwda TS0041",
+   "name_by_user": null,
+   "sw_version": "0x00000044",
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "0877f7e36c14c90bc10b94a7a089dea8",
+   "identifiers": [
+    [
+     "zha",
+     "50:32:5f:ff:fe:63:26:55"
+    ]
+   ],
+   "manufacturer": "_TZE200_cwnjrr72",
+   "model": "TS0601",
+   "name": "_TZE200_cwnjrr72 TS0601",
+   "name_by_user": null,
+   "sw_version": "0x00000057",
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "synth2gang",
+   "identifiers": [
+    [
+     "zha",
+     "aa:bb:cc:dd:ee:00:00:01"
+    ]
+   ],
+   "manufacturer": "_TZ3000_test",
+   "model": "TS0002",
+   "name": "Dwukanałowy",
+   "name_by_user": null,
+   "sw_version": null,
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "synthth",
+   "identifiers": [
+    [
+     "zha",
+     "aa:bb:cc:dd:ee:00:00:02"
+    ]
+   ],
+   "manufacturer": "_TZ3000_th",
+   "model": "TS0201",
+   "name": "Czujnik TH",
+   "name_by_user": "Salon/czujnik",
+   "sw_version": null,
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "synthcover",
+   "identifiers": [
+    [
+     "zha",
+     "aa:bb:cc:dd:ee:00:00:03"
+    ]
+   ],
+   "manufacturer": "_TZ3000_cov",
+   "model": "TS130F",
+   "name": "Roleta",
+   "name_by_user": null,
+   "sw_version": null,
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "synthoff",
+   "identifiers": [
+    [
+     "zha",
+     "aa:bb:cc:dd:ee:00:00:04"
+    ]
+   ],
+   "manufacturer": "SONOFF",
+   "model": "01MINIZB",
+   "name": "Wyłączone",
+   "name_by_user": null,
+   "sw_version": null,
+   "disabled_by": "user",
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  }
+ ],
+ "entity_registry": [
+  {
+   "entity_id": "button.sonoff_01minizb_identify",
+   "device_id": "9f04b91f3c794b14e7350006b1b10d41",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:24:c0:8e:dc-1-3",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "light.sonoff_01minizb",
+   "device_id": "9f04b91f3c794b14e7350006b1b10d41",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:24:c0:8e:dc-1",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.sonoff_01minizb_rssi",
+   "device_id": "9f04b91f3c794b14e7350006b1b10d41",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:24:c0:8e:dc-1-0-rssi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.sonoff_01minizb_lqi",
+   "device_id": "9f04b91f3c794b14e7350006b1b10d41",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:24:c0:8e:dc-1-0-lqi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "update.sonoff_01minizb_firmware",
+   "device_id": "9f04b91f3c794b14e7350006b1b10d41",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:24:c0:8e:dc-1-25-firmware_update",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "button.tz3210_2putqrmw_ts011f_identify",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-3",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "select.tz3210_2putqrmw_ts011f_power_on_state",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-6-power_on_state",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "select.tz3210_2putqrmw_ts011f_backlight_mode",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-6-backlight_mode",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_rssi",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-0-rssi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_lqi",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-0-lqi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_summation_delivered",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-1794-summation_delivered",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_power",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-2820",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_current",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-2820-rms_current",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_voltage",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-2820-rms_voltage",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "switch.tz3210_2putqrmw_ts011f_child_lock",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-child_lock",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "switch.tz3210_2putqrmw_ts011f",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "update.tz3210_2putqrmw_ts011f_firmware",
+   "device_id": "01f7d995e3e9f49188a12da83a02098c",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:97:bc:9d:10:29-1-25-firmware_update",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "binary_sensor.ewelink_ms01",
+   "device_id": "294e533971b30e297e5714887fbb663e",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:e9:5c:cf-1-1280",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "button.ewelink_ms01_identify",
+   "device_id": "294e533971b30e297e5714887fbb663e",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:e9:5c:cf-1-3",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.ewelink_ms01_rssi",
+   "device_id": "294e533971b30e297e5714887fbb663e",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:e9:5c:cf-1-0-rssi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.ewelink_ms01_lqi",
+   "device_id": "294e533971b30e297e5714887fbb663e",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:e9:5c:cf-1-0-lqi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.ewelink_ms01_battery",
+   "device_id": "294e533971b30e297e5714887fbb663e",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:e9:5c:cf-1-1",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "binary_sensor.ewelink_ds01",
+   "device_id": "e0dd29b48628e6c9470d34a9ee6fbba0",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:ea:20:33-1-1280",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "button.ewelink_ds01_identify",
+   "device_id": "e0dd29b48628e6c9470d34a9ee6fbba0",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:ea:20:33-1-3",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.ewelink_ds01_rssi",
+   "device_id": "e0dd29b48628e6c9470d34a9ee6fbba0",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:ea:20:33-1-0-rssi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.ewelink_ds01_lqi",
+   "device_id": "e0dd29b48628e6c9470d34a9ee6fbba0",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:ea:20:33-1-0-lqi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.ewelink_ds01_battery",
+   "device_id": "e0dd29b48628e6c9470d34a9ee6fbba0",
+   "platform": "zha",
+   "unique_id": "00:12:4b:00:22:ea:20:33-1-1",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.unk_manufacturer_unk_model_rssi",
+   "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:5d:60:71:15:bd-1-0-rssi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.unk_manufacturer_unk_model_lqi",
+   "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:5d:60:71:15:bd-1-0-lqi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.unk_manufacturer_unk_model_battery",
+   "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:5d:60:71:15:bd-1-1",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "update.unk_manufacturer_unk_model_firmware",
+   "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+   "platform": "zha",
+   "unique_id": "a4:c1:38:5d:60:71:15:bd-1-25-firmware_update",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "climate.tze200_cwnjrr72_ts0601",
+   "device_id": "0877f7e36c14c90bc10b94a7a089dea8",
+   "platform": "zha",
+   "unique_id": "50:32:5f:ff:fe:63:26:55-1",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.tze200_cwnjrr72_ts0601_rssi",
+   "device_id": "0877f7e36c14c90bc10b94a7a089dea8",
+   "platform": "zha",
+   "unique_id": "50:32:5f:ff:fe:63:26:55-1-0-rssi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.tze200_cwnjrr72_ts0601_lqi",
+   "device_id": "0877f7e36c14c90bc10b94a7a089dea8",
+   "platform": "zha",
+   "unique_id": "50:32:5f:ff:fe:63:26:55-1-0-lqi",
+   "entity_category": "diagnostic",
+   "disabled_by": "integration"
+  },
+  {
+   "entity_id": "sensor.tze200_cwnjrr72_ts0601_battery",
+   "device_id": "0877f7e36c14c90bc10b94a7a089dea8",
+   "platform": "zha",
+   "unique_id": "50:32:5f:ff:fe:63:26:55-1-1",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.tze200_cwnjrr72_ts0601_hvac_action",
+   "device_id": "0877f7e36c14c90bc10b94a7a089dea8",
+   "platform": "zha",
+   "unique_id": "50:32:5f:ff:fe:63:26:55-1-513-hvac_action",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "update.tze200_cwnjrr72_ts0601_firmware",
+   "device_id": "0877f7e36c14c90bc10b94a7a089dea8",
+   "platform": "zha",
+   "unique_id": "50:32:5f:ff:fe:63:26:55-1-25-firmware_update",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "switch.dwukanalowy_l2",
+   "device_id": "synth2gang",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:01-2",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "switch.dwukanalowy",
+   "device_id": "synth2gang",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:01-1",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "switch.dwukanalowy_backlight",
+   "device_id": "synth2gang",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:01-1-backlight",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.czujnik_th_temperature",
+   "device_id": "synthth",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:02-1-1026",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.czujnik_th_humidity",
+   "device_id": "synthth",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:02-1-1029",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.czujnik_th_battery",
+   "device_id": "synthth",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:02-1-1",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.czujnik_th_voltage",
+   "device_id": "synthth",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:02-1-1-voltage",
+   "entity_category": "diagnostic",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "cover.roleta",
+   "device_id": "synthcover",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:03-1",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "switch.roleta_calibration",
+   "device_id": "synthcover",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:03-1-cal",
+   "entity_category": "config",
+   "disabled_by": null
+  },
+  {
+   "entity_id": "switch.wylaczone",
+   "device_id": "synthoff",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:04-1",
+   "entity_category": null,
+   "disabled_by": null
+  }
+ ],
+ "states": [
+  {
+   "entity_id": "button.sonoff_01minizb_identify",
+   "state": "unknown",
+   "attributes": {
+    "device_class": "identify",
+    "friendly_name": "SONOFF 01MINIZB Identify"
+   }
+  },
+  {
+   "entity_id": "light.sonoff_01minizb",
+   "state": "off",
+   "attributes": {
+    "supported_color_modes": [
+     "onoff"
+    ],
+    "color_mode": null,
+    "off_with_transition": false,
+    "off_brightness": null,
+    "friendly_name": "SONOFF 01MINIZB",
+    "supported_features": 8
+   }
+  },
+  {
+   "entity_id": "update.sonoff_01minizb_firmware",
+   "state": "unknown",
+   "attributes": {
+    "auto_update": false,
+    "display_precision": 2,
+    "installed_version": "0x00002000",
+    "in_progress": false,
+    "latest_version": null,
+    "release_summary": null,
+    "release_url": null,
+    "skipped_version": null,
+    "title": null,
+    "update_percentage": null,
+    "device_class": "firmware",
+    "entity_picture": "/api/brands/integration/zha/icon.png",
+    "friendly_name": "SONOFF 01MINIZB Firmware",
+    "supported_features": 23
+   }
+  },
+  {
+   "entity_id": "button.tz3210_2putqrmw_ts011f_identify",
+   "state": "unknown",
+   "attributes": {
+    "device_class": "identify",
+    "friendly_name": "_TZ3210_2putqrmw TS011F Identify"
+   }
+  },
+  {
+   "entity_id": "select.tz3210_2putqrmw_ts011f_power_on_state",
+   "state": "LastState",
+   "attributes": {
+    "options": [
+     "Off",
+     "On",
+     "LastState"
+    ],
+    "friendly_name": "_TZ3210_2putqrmw TS011F Power on state"
+   }
+  },
+  {
+   "entity_id": "select.tz3210_2putqrmw_ts011f_backlight_mode",
+   "state": "LightWhenOn",
+   "attributes": {
+    "options": [
+     "Off",
+     "LightWhenOn",
+     "LightWhenOff"
+    ],
+    "friendly_name": "_TZ3210_2putqrmw TS011F Backlight mode"
+   }
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_summation_delivered",
+   "state": "0.0",
+   "attributes": {
+    "state_class": "total_increasing",
+    "zcl_unit_of_measurement": 0,
+    "device_type": "Electric Metering",
+    "status": "NO_ALARMS",
+    "unit_of_measurement": "kWh",
+    "device_class": "energy",
+    "friendly_name": "_TZ3210_2putqrmw TS011F Summation delivered"
+   }
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_power",
+   "state": "0.0",
+   "attributes": {
+    "state_class": "measurement",
+    "unit_of_measurement": "W",
+    "device_class": "power",
+    "friendly_name": "_TZ3210_2putqrmw TS011F Power"
+   }
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_current",
+   "state": "0.0",
+   "attributes": {
+    "state_class": "measurement",
+    "unit_of_measurement": "A",
+    "device_class": "current",
+    "friendly_name": "_TZ3210_2putqrmw TS011F Current"
+   }
+  },
+  {
+   "entity_id": "sensor.tz3210_2putqrmw_ts011f_voltage",
+   "state": "239.0",
+   "attributes": {
+    "state_class": "measurement",
+    "unit_of_measurement": "V",
+    "device_class": "voltage",
+    "friendly_name": "_TZ3210_2putqrmw TS011F Voltage"
+   }
+  },
+  {
+   "entity_id": "switch.tz3210_2putqrmw_ts011f_child_lock",
+   "state": "off",
+   "attributes": {
+    "friendly_name": "_TZ3210_2putqrmw TS011F Child lock"
+   }
+  },
+  {
+   "entity_id": "switch.tz3210_2putqrmw_ts011f",
+   "state": "off",
+   "attributes": {
+    "friendly_name": "_TZ3210_2putqrmw TS011F"
+   }
+  },
+  {
+   "entity_id": "update.tz3210_2putqrmw_ts011f_firmware",
+   "state": "unknown",
+   "attributes": {
+    "auto_update": false,
+    "display_precision": 2,
+    "installed_version": "0x00000053",
+    "in_progress": false,
+    "latest_version": null,
+    "release_summary": null,
+    "release_url": null,
+    "skipped_version": null,
+    "title": null,
+    "update_percentage": null,
+    "device_class": "firmware",
+    "entity_picture": "/api/brands/integration/zha/icon.png",
+    "friendly_name": "_TZ3210_2putqrmw TS011F Firmware",
+    "supported_features": 23
+   }
+  },
+  {
+   "entity_id": "binary_sensor.ewelink_ms01",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "eWeLink MS01"
+   }
+  },
+  {
+   "entity_id": "button.ewelink_ms01_identify",
+   "state": "unknown",
+   "attributes": {
+    "device_class": "identify",
+    "friendly_name": "eWeLink MS01 Identify"
+   }
+  },
+  {
+   "entity_id": "sensor.ewelink_ms01_battery",
+   "state": "100.0",
+   "attributes": {
+    "state_class": "measurement",
+    "battery_voltage": 3.2,
+    "unit_of_measurement": "%",
+    "device_class": "battery",
+    "friendly_name": "eWeLink MS01 Battery"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.ewelink_ds01",
+   "state": "on",
+   "attributes": {
+    "device_class": "opening",
+    "friendly_name": "eWeLink DS01"
+   }
+  },
+  {
+   "entity_id": "button.ewelink_ds01_identify",
+   "state": "unknown",
+   "attributes": {
+    "device_class": "identify",
+    "friendly_name": "eWeLink DS01 Identify"
+   }
+  },
+  {
+   "entity_id": "sensor.ewelink_ds01_battery",
+   "state": "27.0",
+   "attributes": {
+    "state_class": "measurement",
+    "battery_voltage": 2.8,
+    "unit_of_measurement": "%",
+    "device_class": "battery",
+    "friendly_name": "eWeLink DS01 Battery"
+   }
+  },
+  {
+   "entity_id": "sensor.unk_manufacturer_unk_model_battery",
+   "state": "100.0",
+   "attributes": {
+    "state_class": "measurement",
+    "battery_voltage": 3.0,
+    "unit_of_measurement": "%",
+    "device_class": "battery",
+    "friendly_name": "_TZ3000_8rppvwda TS0041 Battery"
+   }
+  },
+  {
+   "entity_id": "update.unk_manufacturer_unk_model_firmware",
+   "state": "unknown",
+   "attributes": {
+    "auto_update": false,
+    "display_precision": 2,
+    "installed_version": "0x00000044",
+    "in_progress": false,
+    "latest_version": null,
+    "release_summary": null,
+    "release_url": null,
+    "skipped_version": null,
+    "title": null,
+    "update_percentage": null,
+    "device_class": "firmware",
+    "entity_picture": "/api/brands/integration/zha/icon.png",
+    "friendly_name": "_TZ3000_8rppvwda TS0041 Firmware",
+    "supported_features": 23
+   }
+  },
+  {
+   "entity_id": "climate.tze200_cwnjrr72_ts0601",
+   "state": "heat",
+   "attributes": {
+    "hvac_modes": [
+     "heat"
+    ],
+    "min_temp": 5.0,
+    "max_temp": 35.0,
+    "preset_modes": [
+     "none",
+     "away",
+     "Schedule",
+     "comfort",
+     "eco",
+     "boost",
+     "Complex"
+    ],
+    "current_temperature": 27.5,
+    "temperature": 20.0,
+    "hvac_action": "idle",
+    "preset_mode": "none",
+    "occupancy": 1,
+    "occupied_heating_setpoint": 2000,
+    "system_mode": "[<SystemMode.Heat: 4>]/heat",
+    "unoccupied_heating_setpoint": 1500,
+    "friendly_name": "_TZE200_cwnjrr72 TS0601",
+    "supported_features": 401
+   }
+  },
+  {
+   "entity_id": "sensor.tze200_cwnjrr72_ts0601_battery",
+   "state": "100.0",
+   "attributes": {
+    "state_class": "measurement",
+    "battery_size": "AA",
+    "battery_quantity": 2,
+    "unit_of_measurement": "%",
+    "device_class": "battery",
+    "friendly_name": "_TZE200_cwnjrr72 TS0601 Battery"
+   }
+  },
+  {
+   "entity_id": "sensor.tze200_cwnjrr72_ts0601_hvac_action",
+   "state": "idle",
+   "attributes": {
+    "friendly_name": "_TZE200_cwnjrr72 TS0601 HVAC action"
+   }
+  },
+  {
+   "entity_id": "update.tze200_cwnjrr72_ts0601_firmware",
+   "state": "unknown",
+   "attributes": {
+    "auto_update": false,
+    "display_precision": 2,
+    "installed_version": "0x00000057",
+    "in_progress": false,
+    "latest_version": null,
+    "release_summary": null,
+    "release_url": null,
+    "skipped_version": null,
+    "title": null,
+    "update_percentage": null,
+    "device_class": "firmware",
+    "entity_picture": "/api/brands/integration/zha/icon.png",
+    "friendly_name": "_TZE200_cwnjrr72 TS0601 Firmware",
+    "supported_features": 23
+   }
+  },
+  {
+   "entity_id": "switch.dwukanalowy_l2",
+   "state": "off",
+   "attributes": {}
+  },
+  {
+   "entity_id": "switch.dwukanalowy",
+   "state": "on",
+   "attributes": {}
+  },
+  {
+   "entity_id": "switch.dwukanalowy_backlight",
+   "state": "off",
+   "attributes": {}
+  },
+  {
+   "entity_id": "sensor.czujnik_th_temperature",
+   "state": "70.7",
+   "attributes": {
+    "device_class": "temperature",
+    "unit_of_measurement": "°F"
+   }
+  },
+  {
+   "entity_id": "sensor.czujnik_th_humidity",
+   "state": "48.2",
+   "attributes": {
+    "device_class": "humidity",
+    "unit_of_measurement": "%"
+   }
+  },
+  {
+   "entity_id": "sensor.czujnik_th_battery",
+   "state": "87",
+   "attributes": {
+    "device_class": "battery",
+    "unit_of_measurement": "%"
+   }
+  },
+  {
+   "entity_id": "sensor.czujnik_th_voltage",
+   "state": "2.9",
+   "attributes": {
+    "device_class": "voltage",
+    "unit_of_measurement": "V"
+   }
+  },
+  {
+   "entity_id": "cover.roleta",
+   "state": "open",
+   "attributes": {}
+  },
+  {
+   "entity_id": "switch.roleta_calibration",
+   "state": "off",
+   "attributes": {}
+  },
+  {
+   "entity_id": "switch.wylaczone",
+   "state": "off",
+   "attributes": {}
+  }
+ ],
+ "zha_devices": [
+  {
+   "ieee": "00:12:4b:00:25:7b:f3:28",
+   "device_type": "Coordinator",
+   "manufacturer": "Texas Instruments",
+   "model": "CC2652",
+   "power_source": "Mains"
+  },
+  {
+   "ieee": "00:12:4b:00:24:c0:8e:dc",
+   "device_type": "Router",
+   "manufacturer": "SONOFF",
+   "model": "01MINIZB",
+   "power_source": "Mains"
+  },
+  {
+   "ieee": "a4:c1:38:97:bc:9d:10:29",
+   "device_type": "Router",
+   "manufacturer": "_TZ3210_2putqrmw",
+   "model": "TS011F",
+   "power_source": "Mains"
+  },
+  {
+   "ieee": "00:12:4b:00:22:e9:5c:cf",
+   "device_type": "EndDevice",
+   "manufacturer": "eWeLink",
+   "model": "MS01",
+   "power_source": "Battery or Unknown"
+  },
+  {
+   "ieee": "00:12:4b:00:22:ea:20:33",
+   "device_type": "EndDevice",
+   "manufacturer": "eWeLink",
+   "model": "DS01",
+   "power_source": "Battery or Unknown"
+  },
+  {
+   "ieee": "a4:c1:38:5d:60:71:15:bd",
+   "device_type": "EndDevice",
+   "manufacturer": "_TZ3000_8rppvwda",
+   "model": "TS0041",
+   "power_source": "Battery or Unknown"
+  },
+  {
+   "ieee": "50:32:5f:ff:fe:63:26:55",
+   "device_type": "EndDevice",
+   "manufacturer": "_TZE200_cwnjrr72",
+   "model": "TS0601",
+   "power_source": "Battery or Unknown"
+  },
+  {
+   "ieee": "aa:bb:cc:dd:ee:00:00:01",
+   "device_type": "Router",
+   "manufacturer": "_TZ3000_test",
+   "model": "TS0002",
+   "power_source": "Mains"
+  },
+  {
+   "ieee": "aa:bb:cc:dd:ee:00:00:02",
+   "device_type": "Router",
+   "manufacturer": "_TZ3000_th",
+   "model": "TS0201",
+   "power_source": "Mains"
+  },
+  {
+   "ieee": "aa:bb:cc:dd:ee:00:00:03",
+   "device_type": "Router",
+   "manufacturer": "_TZ3000_cov",
+   "model": "TS130F",
+   "power_source": "Mains"
+  },
+  {
+   "ieee": "aa:bb:cc:dd:ee:00:00:04",
+   "device_type": "Router",
+   "manufacturer": "SONOFF",
+   "model": "01MINIZB",
+   "power_source": "Mains"
+  }
+ ],
+ "triggers": {
+  "ee650f2f85cc7f08f2736fe8bbbb8a7e": [
+   {
+    "platform": "device",
+    "domain": "zha",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "device_offline",
+    "subtype": "device_offline"
+   },
+   {
+    "platform": "device",
+    "domain": "zha",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "remote_button_short_press",
+    "subtype": "button_1"
+   },
+   {
+    "platform": "device",
+    "domain": "zha",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "remote_button_long_press",
+    "subtype": "button_1"
+   },
+   {
+    "platform": "device",
+    "domain": "zha",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "remote_button_double_press",
+    "subtype": "button_1"
+   },
+   {
+    "platform": "device",
+    "domain": "update",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "changed_states",
+    "subtype": null
+   },
+   {
+    "platform": "device",
+    "domain": "update",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "turned_off",
+    "subtype": null
+   },
+   {
+    "platform": "device",
+    "domain": "update",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "turned_on",
+    "subtype": null
+   },
+   {
+    "platform": "device",
+    "domain": "sensor",
+    "device_id": "ee650f2f85cc7f08f2736fe8bbbb8a7e",
+    "type": "battery_level",
+    "subtype": null
+   }
+  ]
+ }
+}

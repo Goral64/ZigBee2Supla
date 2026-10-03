@@ -24,6 +24,9 @@ class WebSocketClient {
   bool sendText(const std::string &message, std::string *error);
   // Waits for the next complete text message.
   bool receiveText(std::string *message, int timeoutMs, std::string *error);
+  // True when data (or the end of the connection) can be read within
+  // timeoutMs, so that receiveText() does not wait for a new message.
+  bool waitReadable(int timeoutMs);
   void close();
   bool isConnected() const { return fd_ >= 0; }
 

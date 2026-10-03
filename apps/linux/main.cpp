@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
-// zigbee2supla for Linux: every ZigBee device known to zigbee2mqtt is
+// zigbee2supla for Linux: every ZigBee device known to zigbee2mqtt or ZHA is
 // registered in Supla as a separate device.
 
 #include <openssl/rand.h>
@@ -11,6 +11,7 @@
 
 #include <csignal>
 #include <cstdio>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,7 @@
 #include "z2s/gateway.h"
 #include "z2s/identity_store.h"
 #include "z2s/log.h"
+#include "zha_backend.h"
 
 namespace {
 
@@ -110,10 +112,16 @@ int main(int argc, char **argv) {
   config.ha.stateFile = config.stateDir + "/ha_disabled_devices.json";
   z2s::HaDuplicateDisabler haDuplicates(config.ha);
 
-  z2s::z2m::Z2mBackend backend(config.mqtt);
-  z2s::Gateway gateway(config.gateway, &store, &transportFactory, &backend);
-  backend.setListener(&gateway);
-  if (!backend.start()) {
+  std::unique_ptr<z2s::Backend> backend;
+  if (config.source == "zha") {
+    backend = std::make_unique<z2s::zha::ZhaBackend>(config.zha);
+  } else {
+    backend = std::make_unique<z2s::z2m::Z2mBackend>(config.mqtt);
+  }
+  z2s::Gateway gateway(config.gateway, &store, &transportFactory,
+                       backend.get());
+  backend->setListener(&gateway);
+  if (!backend->start()) {
     return 1;
   }
   haDuplicates.start();
@@ -132,7 +140,7 @@ int main(int argc, char **argv) {
     // Wake up at least every 20 ms to process MQTT events and timers.
     ::poll(pfds.data(), pfds.size(), 20);
 
-    backend.poll();
+    backend->poll();
     uint64_t now = monotonicMs();
     gateway.iterate(now);
 
@@ -151,12 +159,12 @@ int main(int argc, char **argv) {
       Z2S_LOG_INFO(
           "Status: %zu ZigBee device(s), %zu bridged: %zu connected to "
           "Supla, %zu offline in ZigBee, %zu connecting or failed",
-          backend.deviceCount(), bridged, connected, offline, other);
+          backend->deviceCount(), bridged, connected, offline, other);
     }
   }
 
   Z2S_LOG_INFO("Stopping");
   haDuplicates.stop();
-  backend.stop();
+  backend->stop();
   return 0;
 }

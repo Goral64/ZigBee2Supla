@@ -3,13 +3,12 @@
 // Assistant WebSocket API.
 
 #include "ha_sync.h"
+#include "fake_websocket.h"
 #include "websocket_client.h"
 
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
 #include <netinet/in.h>
-#include <openssl/evp.h>
-#include <openssl/sha.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -21,6 +20,7 @@
 #include <vector>
 
 using namespace z2s;
+using namespace z2s::test;
 using json = nlohmann::json;
 
 namespace {
@@ -29,55 +29,6 @@ const bool kSigpipeIgnored = [] {
   signal(SIGPIPE, SIG_IGN);
   return true;
 }();
-
-bool readN(int fd, void *buf, size_t n) {
-  char *p = static_cast<char *>(buf);
-  while (n > 0) {
-    ssize_t r = recv(fd, p, n, 0);
-    if (r <= 0) return false;
-    p += r;
-    n -= static_cast<size_t>(r);
-  }
-  return true;
-}
-
-void sendFrame(int fd, uint8_t opcode, const std::string &payload,
-               bool fin = true) {
-  std::string f;
-  f.push_back(static_cast<char>((fin ? 0x80 : 0) | opcode));
-  if (payload.size() < 126) {
-    f.push_back(static_cast<char>(payload.size()));
-  } else {
-    f.push_back(126);
-    f.push_back(static_cast<char>(payload.size() >> 8));
-    f.push_back(static_cast<char>(payload.size() & 0xFF));
-  }
-  f += payload;
-  send(fd, f.data(), f.size(), MSG_NOSIGNAL);
-}
-
-// Reads one client (masked) frame; returns opcode or -1.
-int readFrame(int fd, std::string *payload) {
-  unsigned char h[2];
-  if (!readN(fd, h, 2)) return -1;
-  uint64_t len = h[1] & 0x7F;
-  if (len == 126) {
-    unsigned char e[2];
-    if (!readN(fd, e, 2)) return -1;
-    len = (e[0] << 8) | e[1];
-  } else if (len == 127) {
-    unsigned char e[8];
-    if (!readN(fd, e, 8)) return -1;
-    len = 0;
-    for (int i = 0; i < 8; i++) len = (len << 8) | e[i];
-  }
-  unsigned char mask[4];
-  if (!(h[1] & 0x80) || !readN(fd, mask, 4)) return -1;  // must be masked
-  payload->assign(len, '\0');
-  if (len > 0 && !readN(fd, &(*payload)[0], len)) return -1;
-  for (size_t i = 0; i < len; i++) (*payload)[i] ^= mask[i % 4];
-  return h[0] & 0x0F;
-}
 
 class FakeHomeAssistant {
  public:
@@ -122,29 +73,7 @@ class FakeHomeAssistant {
   }
 
   void handle(int fd) {
-    // HTTP upgrade
-    std::string req;
-    char c;
-    while (req.find("\r\n\r\n") == std::string::npos &&
-           recv(fd, &c, 1, 0) == 1) {
-      req.push_back(c);
-    }
-    std::string keyHdr = "Sec-WebSocket-Key: ";
-    size_t k = req.find(keyHdr);
-    if (k == std::string::npos || req.find("GET /api/websocket") != 0) return;
-    std::string key =
-        req.substr(k + keyHdr.size(), req.find("\r\n", k) - k - keyHdr.size());
-    std::string acc = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-    unsigned char digest[SHA_DIGEST_LENGTH];
-    SHA1(reinterpret_cast<const unsigned char *>(acc.data()), acc.size(),
-         digest);
-    unsigned char b64[64];
-    EVP_EncodeBlock(b64, digest, SHA_DIGEST_LENGTH);
-    std::string resp =
-        "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\n"
-        "Connection: Upgrade\r\nSec-WebSocket-Accept: " +
-        std::string(reinterpret_cast<char *>(b64)) + "\r\n\r\n";
-    send(fd, resp.data(), resp.size(), MSG_NOSIGNAL);
+    if (!acceptHandshake(fd, "/api/websocket")) return;
 
     sendFrame(fd, 0x1, R"({"type":"auth_required","ha_version":"2026.9.0"})");
     std::string payload;

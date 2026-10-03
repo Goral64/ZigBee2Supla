@@ -1,12 +1,12 @@
 # Zigbee2Supla
 
-**Zigbee2MQTT to Supla bridge** – mostek między
-[zigbee2mqtt](https://www.zigbee2mqtt.io) a [Suplą](https://www.supla.org).
-Urządzenia ZigBee z zigbee2mqtt trafiają do Supli tak, jakby
-każde było osobnym urządzeniem Supli: z własną nazwą, lokalizacją,
-statusem online, kanałami i historią. W Supla Cloud i w aplikacji widzisz
-więc „Termometr salon” i „Gniazdko pralka”, a nie jedną bramkę ze stoma
-kanałami.
+**Zigbee to Supla bridge** – mostek między siecią ZigBee
+([zigbee2mqtt](https://www.zigbee2mqtt.io) albo ZHA w Home Assistant)
+a [Suplą](https://www.supla.org). Urządzenia ZigBee trafiają do Supli
+tak, jakby każde było osobnym urządzeniem Supli: z własną nazwą,
+lokalizacją, statusem online, kanałami i historią. W Supla Cloud
+i w aplikacji widzisz więc „Termometr salon” i „Gniazdko pralka”, a nie
+jedną bramkę ze stoma kanałami.
 
 **Stan: wersja beta.** Mostek działa na co dzień w instalacji z ponad
 100 urządzeniami ZigBee (Home Assistant OS z zigbee2mqtt, Supla Cloud).
@@ -40,7 +40,8 @@ Szczegóły dla każdego rodzaju urządzeń: [docs/urzadzenia.md](docs/urzadzeni
 Mostek czyta urządzenia i ich stany z zigbee2mqtt przez MQTT i dla każdego
 urządzenia ZigBee utrzymuje osobne połączenie z serwerem Supli, tak jak
 robi to zwykłe urządzenie Supli. Polecenia z Supli (włącz, ustaw
-temperaturę) wracają tą samą drogą do zigbee2mqtt.
+temperaturę) wracają tą samą drogą do zigbee2mqtt. Zamiast zigbee2mqtt
+może to być ZHA w Home Assistant ([docs/zha.md](docs/zha.md)).
 
 Tożsamość urządzeń w Supli (GUID i AuthKey) mostek losuje przy pierwszym
 połączeniu i zapisuje w pliku `identities.json`. **Ten plik trzeba
@@ -52,7 +53,7 @@ pojawią się w Supli jako nowe.
 * zigbee2mqtt z brokerem MQTT (np. dodatki „Zigbee2MQTT” i „Mosquitto
   broker” w Home Assistant; zalecana włączona funkcja *availability*)
   albo koordynator ZigBee (USB lub sieciowy), wtedy zigbee2mqtt instaluje
-  się razem z mostkiem,
+  się razem z mostkiem, albo ZHA w Home Assistant (bez MQTT),
 * konto Supli: Supla Cloud albo własny serwer (supla-docker),
 * miejsce do uruchomienia mostka: dodatek Home Assistant albo Docker
   (amd64, arm64, armv7).
@@ -121,6 +122,7 @@ wartość z pliku (np. hasło z sekretu Dockera).
 
 | Opcja | Domyślnie | Opis |
 |---|---|---|
+| `source` | `z2m` | skąd brać urządzenia: `z2m` (zigbee2mqtt) albo `zha` (ZHA w Home Assistant, [docs/zha.md](docs/zha.md)) |
 | `supla_server` | – | adres serwera Supli, np. `svr12.supla.org` |
 | `supla_email` | – | e-mail konta Supla |
 | `supla_security_level` | `0` | `0` – certyfikat CA Supli (Supla Cloud), `3` – przypięty certyfikat z `supla_ca_file` (własny serwer), `1` – inny CA z `supla_ca_file`, `2` – bez weryfikacji (tylko zaufana sieć lokalna); zob. [docs/docker.md](docs/docker.md#5-certyfikat-serwera) |
@@ -132,12 +134,12 @@ wartość z pliku (np. hasło z sekretu Dockera).
 | `mqtt_client_id` | `zigbee2supla-<nazwa hosta>` | identyfikator klienta MQTT; dwie instancje mostka przy jednym brokerze muszą mieć różne (broker rozłącza klienta, gdy połączy się inny z tym samym identyfikatorem) |
 | `z2m_base_topic` | `zigbee2mqtt` | temat bazowy zigbee2mqtt |
 | `state_dir` | `.` | katalog na `identities.json` (Docker: `/data`) |
-| `include` | `[]` | tylko te urządzenia (nazwa z zigbee2mqtt albo adres IEEE); pusta lista = wszystkie |
+| `include` | `[]` | tylko te urządzenia (nazwa urządzenia albo adres IEEE); pusta lista = wszystkie |
 | `exclude` | `[]` | te urządzenia są pomijane |
 | `max_parallel_connects` | `4` | ile urządzeń łączy się z Suplą jednocześnie |
 | `log_level` | `info` | `error`, `warning`, `info`, `debug`, `verbose` |
 | `ha_disable_supla_duplicates` | `false` | wyłączaj w HA duplikaty z discovery Supli ([docs/home-assistant.md](docs/home-assistant.md)); w dodatku HA domyślnie włączone |
-| `ha_websocket_url` | | API WebSocket HA, np. `ws://192.168.1.10:8123/api/websocket` (nie dotyczy dodatku) |
+| `ha_websocket_url` | | API WebSocket HA, np. `ws://192.168.1.10:8123/api/websocket`, dla `source: zha` i wyłączania duplikatów (nie dotyczy dodatku) |
 | `ha_token` | | token dostępu HA, długoterminowy (nie dotyczy dodatku) |
 
 Co minutę (i przy każdej zmianie) mostek wypisuje stan, np.:
@@ -171,6 +173,10 @@ kontener Docker na osobnej maszynie, usługa w supla-docker oraz zestaw
 z własnym koordynatorem instalowany przez `z2s.sh`, z ConBee II (USB)
 i SLZB-06U (sieciowym), zarówno z Supla Cloud, jak i z supla-docker.
 
+ZHA jako źródło urządzeń działa na osobnym Home Assistant z kilkoma
+urządzeniami (ZBMINI, gniazdko TS011F, SNZB-04, przycisk TS0041, głowica
+TS0601), na razie tylko z udawanym serwerem Supli.
+
 **Jeszcze nie ma:** ściemniania i koloru świateł, rolet, zamków,
 wentylatorów, harmonogramu tygodniowego Supli dla termostatów (działa
 program samego urządzenia), zerowania licznika energii.
@@ -192,7 +198,7 @@ Więcej informacji daje `log_level: debug`.
 ## Dla programistów
 
 Mostek jest napisany w C++17 (CMake). Rdzeń (`core/`) nie zależy od
-platformy, z myślą o przyszłej wersji na ESP32.
+platformy.
 
 ```sh
 tools/dev/dev.sh cmake --preset debug          # kontener deweloperski,
@@ -214,6 +220,7 @@ ctest --preset debug
 |---|---|
 | `core/` | sesje Supli (jedno urządzenie = jedna sesja), kanały, tożsamości |
 | `backends/z2m/` | źródło urządzeń: zigbee2mqtt przez MQTT, mapowanie na kanały |
+| `backends/zha/` | źródło urządzeń: ZHA przez API WebSocket Home Assistanta |
 | `platform/linux/` | transport TLS (OpenSSL), klient WebSocket |
 | `apps/linux/` | program `zigbee2supla`, konfiguracja |
 | `integrations/ha/` | wyłączanie duplikatów w Home Assistant |

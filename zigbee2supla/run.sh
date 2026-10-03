@@ -26,6 +26,10 @@ elif bashio::services.available "mqtt"; then
   MQTT_PORT="$(bashio::services mqtt 'port')"
   MQTT_USER="$(bashio::services mqtt 'username')"
   MQTT_PASS="$(bashio::services mqtt 'password')"
+elif [ "$(bashio::config 'source')" = "zha" ]; then
+  MQTT_PORT=""
+  MQTT_USER=""
+  MQTT_PASS=""
 else
   bashio::log.warning "No MQTT broker: install the Mosquitto add-on or set mqtt_host"
   MQTT_PORT=""
@@ -45,5 +49,9 @@ jq --arg host "${MQTT_HOST:-localhost}" \
          ha_token: $token}' \
    "${OPTIONS}" > "${CONFIG}"
 
-bashio::log.info "Starting zigbee2supla (MQTT ${MQTT_HOST}:${MQTT_PORT})"
+if [ "$(bashio::config 'source')" = "zha" ]; then
+  bashio::log.info "Starting zigbee2supla (devices from ZHA)"
+else
+  bashio::log.info "Starting zigbee2supla (MQTT ${MQTT_HOST}:${MQTT_PORT})"
+fi
 exec /usr/bin/zigbee2supla -c "${CONFIG}"
