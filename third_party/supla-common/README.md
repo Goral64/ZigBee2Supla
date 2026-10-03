@@ -9,5 +9,6 @@ Licencja: GPL-2.0-or-later (AC SOFTWARE SP. Z O.O.).
 `log.c` nie jest kopiowany – implementację `supla_log()` dostarcza
 `core/src/log.cpp`.
 
-**Nie edytuj tych plików ręcznie.** Aktualizacja: `tools/update_supla_common.sh`
-i procedura w [`docs/utrzymanie-protokolu.md`](../../docs/utrzymanie-protokolu.md).
+**Nie edytuj tych plików ręcznie.** Aktualizacja:
+`tools/update_supla_common.sh <tag>`, a potem `ctest` (w tym
+`proto_contract_test`).
