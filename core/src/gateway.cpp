@@ -3,11 +3,33 @@
 #include "z2s/gateway.h"
 
 #include <algorithm>
+#include <cctype>
 #include <set>
 
 #include "z2s/log.h"
 
 namespace z2s {
+
+namespace {
+
+// Device id ("0x" + 16 lowercase hex digits) of an IEEE address written as in
+// zigbee2mqtt ("0xA4C1...") or in Home Assistant ("a4:c1:..."); other entries
+// (device names) are returned unchanged.
+std::string normalizedIeee(const std::string &entry) {
+  std::string hex = entry;
+  if (hex.size() > 2 && hex[0] == '0' && (hex[1] == 'x' || hex[1] == 'X')) {
+    hex.erase(0, 2);
+  }
+  hex.erase(std::remove(hex.begin(), hex.end(), ':'), hex.end());
+  if (hex.size() != 16) return entry;
+  for (char &c : hex) {
+    if (!std::isxdigit(static_cast<unsigned char>(c))) return entry;
+    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+  }
+  return "0x" + hex;
+}
+
+}  // namespace
 
 Gateway::Gateway(const GatewayConfig &config, IdentityStore *store,
                  TransportFactory *factory, Backend *backend)
@@ -15,8 +37,9 @@ Gateway::Gateway(const GatewayConfig &config, IdentityStore *store,
 
 bool Gateway::isBridged(const DeviceDescriptor &device) const {
   auto matches = [&device](const std::vector<std::string> &list) {
-    return std::find(list.begin(), list.end(), device.id) != list.end() ||
-           std::find(list.begin(), list.end(), device.name) != list.end();
+    return std::any_of(list.begin(), list.end(), [&](const std::string &e) {
+      return e == device.name || normalizedIeee(e) == device.id;
+    });
   };
   if (matches(config_.exclude)) {
     return false;

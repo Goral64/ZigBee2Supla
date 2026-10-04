@@ -123,8 +123,8 @@ TEST(ZhaBackendTest, DeviceListStatesAndAvailability) {
   backend.handleDevices(parseDevices(s), zhaDeviceIds(s).size(), s.states);
 
   EXPECT_EQ(listener.deviceListCount, 1);
-  EXPECT_EQ(listener.devices.size(), 7u);
-  EXPECT_EQ(backend.deviceCount(), 10u);
+  EXPECT_EQ(listener.devices.size(), 8u);
+  EXPECT_EQ(backend.deviceCount(), 11u);
   // Every device with states gets its availability once.
   EXPECT_EQ(listener.availability[kContact], true);
   EXPECT_EQ(listener.availability[kPlug], true);
@@ -383,8 +383,8 @@ TEST(ZhaBackendTest, AgainstFakeHomeAssistant) {
 
   ASSERT_TRUE(pollUntil(&backend, [&] { return listener.backendOnline; }));
   EXPECT_EQ(listener.deviceListCount, 1);
-  EXPECT_EQ(listener.devices.size(), 7u);
-  EXPECT_EQ(backend.deviceCount(), 10u);
+  EXPECT_EQ(listener.devices.size(), 8u);
+  EXPECT_EQ(backend.deviceCount(), 11u);
   EXPECT_FALSE(listener.states.empty());
   // Button: short press, double press and hold.
   EXPECT_EQ(ha.triggerSubscriptionCount(), 3u);

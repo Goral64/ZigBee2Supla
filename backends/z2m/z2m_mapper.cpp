@@ -153,6 +153,7 @@ constexpr Measurement kVoltage = {"voltage", "V", "napięcie", 1};
 constexpr Measurement kCurrent = {"current", "A", "natężenie prądu", 2};
 constexpr Measurement kIlluminance = {"illuminance", "lx", "natężenie światła",
                                       0};
+constexpr Measurement kFlow = {"flow", "m³/h", "przepływ", 2};
 
 Binding measurementBinding(const Measurement &m) {
   Binding b;
@@ -215,7 +216,7 @@ void addEnergyBindings(const std::vector<Feature> &features,
 // Other measurements without a dedicated Supla channel type.
 void addMeasurementBindings(const std::vector<Feature> &features,
                             std::vector<Binding> *bindings) {
-  for (const Measurement *m : {&kIlluminance}) {
+  for (const Measurement *m : {&kIlluminance, &kFlow}) {
     if (stateNumber(features, m->property, m->unit) == nullptr) continue;
     bindings->push_back(measurementBinding(*m));
   }

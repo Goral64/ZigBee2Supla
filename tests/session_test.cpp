@@ -1068,6 +1068,22 @@ TEST_F(GatewayTest, RequestsStateOnlyFromBridgedDevices) {
   EXPECT_EQ(backend_.stateRequests[1], switchDevice(1).id);
 }
 
+TEST_F(GatewayTest, IeeeAddressMatchesInAnyNotation) {
+  config_.include = {"00:00:00:00:00:00:00:11", "0X0000000000000012",
+                     "00:00:00:00:00:00:00:13"};
+  config_.exclude = {"00:00:00:00:00:00:00:13"};
+  gateway_ =
+      std::make_unique<Gateway>(config_, store_.get(), &factory_, &backend_);
+  gateway_->onBackendAvailability(true);
+
+  gateway_->onDeviceList(
+      {switchDevice(1), switchDevice(2), switchDevice(3), switchDevice(4)});
+  EXPECT_EQ(gateway_->sessionCount(), 2u);
+  ASSERT_EQ(backend_.stateRequests.size(), 2u);
+  EXPECT_EQ(backend_.stateRequests[0], switchDevice(1).id);
+  EXPECT_EQ(backend_.stateRequests[1], switchDevice(2).id);
+}
+
 TEST_F(GatewayTest, RenamedDeviceKeepsItsIdentity) {
   DeviceDescriptor device = switchDevice(1);
   gateway_->onDeviceList({device});

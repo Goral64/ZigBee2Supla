@@ -205,6 +205,8 @@ constexpr Measurement kCurrent = {"current", "current", "A", "natężenie prądu
                                   2};
 constexpr Measurement kIlluminance = {"illuminance", "illuminance", "lx",
                                       "natężenie światła", 0};
+constexpr Measurement kFlow = {"volume_flow_rate", "flow", "m³/h", "przepływ",
+                               2};
 
 Binding measurementBinding(const Measurement &m, const std::string &entityId) {
   Binding b;
@@ -499,8 +501,10 @@ std::optional<Device> parseDevice(
       }
     }
   }
-  if (const Entity *e = sensor(entities, kIlluminance.deviceClass)) {
-    device.bindings.push_back(measurementBinding(kIlluminance, e->id));
+  for (const Measurement *m : {&kIlluminance, &kFlow}) {
+    if (const Entity *e = sensor(entities, m->deviceClass)) {
+      device.bindings.push_back(measurementBinding(*m, e->id));
+    }
   }
 
   auto triggers = snapshot.triggers.find(device.haDeviceId);
@@ -552,6 +556,11 @@ double toSuplaUnit(double value, const std::string &deviceClass,
       {"pressure", "mmHg", 1.33322, 0},
       {"pressure", "psi", 68.9476, 0},
       {"illuminance", "lx", 1, 0},
+      {"volume_flow_rate", "m³/h", 1, 0},
+      {"volume_flow_rate", "m³/s", 3600, 0},
+      {"volume_flow_rate", "L/h", 0.001, 0},
+      {"volume_flow_rate", "L/min", 0.06, 0},
+      {"volume_flow_rate", "L/s", 3.6, 0},
       {"energy", "kWh", 1, 0},
       {"energy", "Wh", 0.001, 0},
       {"energy", "MWh", 1000, 0},

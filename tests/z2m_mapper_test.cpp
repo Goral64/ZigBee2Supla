@@ -424,6 +424,23 @@ TEST(Z2mMapperTest, LightSensorIsGeneralPurposeMeasurement) {
   EXPECT_DOUBLE_EQ(states[0].second.primary, 312);
 }
 
+TEST(Z2mMapperTest, FlowIsGeneralPurposeMeasurement) {
+  json valve = deviceWithExposes(json::array(
+      {number("battery", "%", 1, 100), number("flow", "m³/h", 1, 100)}));
+  auto devices = parseBridgeDevices(json::array({valve}));
+  ASSERT_EQ(devices.size(), 1u);
+  ASSERT_EQ(devices[0].descriptor.channels.size(), 1u);
+  const ChannelSpec &spec = devices[0].descriptor.channels[0];
+  EXPECT_EQ(spec.kind, ChannelKind::GeneralPurposeMeasurement);
+  EXPECT_EQ(spec.key, "flow");
+  EXPECT_EQ(spec.caption, "przepływ");
+  EXPECT_EQ(spec.unit, "m³/h");
+
+  auto states = extractStates(devices[0], json::parse(R"({"flow":0.6})"));
+  ASSERT_EQ(states.size(), 1u);
+  EXPECT_DOUBLE_EQ(states[0].second.primary, 0.6);
+}
+
 namespace {
 
 json actionExpose(const std::vector<std::string> &values) {
