@@ -136,7 +136,7 @@ wartość z pliku (np. hasło z sekretu Dockera).
 | `mqtt_client_id` | `zigbee2supla-<nazwa hosta>` | identyfikator klienta MQTT; dwie instancje mostka przy jednym brokerze muszą mieć różne (broker rozłącza klienta, gdy połączy się inny z tym samym identyfikatorem) |
 | `z2m_base_topic` | `zigbee2mqtt` | temat bazowy zigbee2mqtt |
 | `state_dir` | `.` | katalog na `identities.json` (Docker: `/data`) |
-| `include` | `[]` | tylko te urządzenia (nazwa urządzenia albo adres IEEE); pusta lista = wszystkie |
+| `include` | `[]` | tylko te urządzenia (nazwa urządzenia albo adres IEEE, np. `0xa4c13875213845e3` albo `A4:C1:38:75:21:38:45:E3`); pusta lista = wszystkie |
 | `exclude` | `[]` | te urządzenia są pomijane |
 | `max_parallel_connects` | `4` | ile urządzeń łączy się z Suplą jednocześnie |
 | `log_level` | `info` | `error`, `warning`, `info`, `debug`, `verbose` |

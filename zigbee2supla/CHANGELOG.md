@@ -1,5 +1,11 @@
 # Zmiany
 
+## 0.4.0-beta.2
+
+- Opcje `include` i `exclude` przyjmują adres IEEE także w zapisie z Home
+  Assistanta (`A4:C1:38:75:21:38:45:E3`), nie tylko `0xa4c13875213845e3`.
+- Przepływ (np. zawór SONOFF SWV) jako pomiar ogólny w m³/h.
+
 ## 0.4.0-beta.1
 
 - Urządzenia można brać z ZHA (integracja ZigBee w Home Assistant)

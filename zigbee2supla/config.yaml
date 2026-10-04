@@ -1,7 +1,7 @@
 name: Zigbee2Supla
 # Must be the version of a release: the Supervisor pulls the add-on image
 # built by CI for this tag (see docs/wydania.md).
-version: "0.4.0-beta.1"
+version: "0.4.0-beta.2"
 image: ghcr.io/goral64/zigbee2supla-addon-{arch}
 slug: zigbee2supla
 description: >-

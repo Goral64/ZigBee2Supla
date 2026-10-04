@@ -23,6 +23,7 @@ udostępnia. Przy ZHA zasady są te same, różnice opisuje [zha.md](zha.md).
 | `energy` (kWh) z `power`, `voltage`, `current` | licznik energii (jedna faza) |
 | `power` (W), `voltage` (V), `current` (A) bez `energy` | pomiar ogólny, osobno każda wartość (bez urządzeń bateryjnych) |
 | `illuminance` (lx) | pomiar ogólny „natężenie światła” |
+| `flow` (m³/h, np. zawór SONOFF SWV) | pomiar ogólny „przepływ” |
 | `action` (przyciski, piloty) | wyzwalacz akcji, osobny kanał na każdy przycisk |
 | `climate` z `current_heating_setpoint` (głowice, termostaty) | termometr + termostat |
 
@@ -94,9 +95,9 @@ Czujnik otwarcia (`contact`) ma w Supli wartość 1, gdy drzwi są zamknięte
 (odwrotnie niż w zigbee2mqtt). Czujniki dymu, gazu, CO i drgań są na razie
 ogólnymi czujnikami binarnymi.
 
-**Pomiar ogólny** (natężenie światła, moc, napięcie, prąd bez licznika)
-dostaje domyślną jednostkę i liczbę miejsc po przecinku (np. „lx”, „W”)
-oraz włączoną historię. Ustawienia zmienione w Supla Cloud zostają.
+**Pomiar ogólny** (natężenie światła, przepływ, moc, napięcie, prąd bez
+licznika) dostaje domyślną jednostkę i liczbę miejsc po przecinku (np.
+„lx”, „W”) oraz włączoną historię. Ustawienia zmienione w Supla Cloud zostają.
 
 ## Licznik energii
 

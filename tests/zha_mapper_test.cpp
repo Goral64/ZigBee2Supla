@@ -56,7 +56,7 @@ TEST(ZhaIdTest, IeeeToZigbee2mqttId) {
 }
 
 TEST_F(ZhaMapperTest, SkipsCoordinatorUnsupportedDisabledAndUnmapped) {
-  EXPECT_EQ(devices.size(), 7u);
+  EXPECT_EQ(devices.size(), 8u);
   EXPECT_EQ(findDevice(devices, "0x00124b00257bf328"), nullptr);  // coord.
   EXPECT_EQ(findDevice(devices, "0xaabbccddee000003"), nullptr);  // cover
   EXPECT_EQ(findDevice(devices, "0xaabbccddee000004"), nullptr);  // disabled
@@ -66,7 +66,7 @@ TEST_F(ZhaMapperTest, SkipsCoordinatorUnsupportedDisabledAndUnmapped) {
   Snapshot s = loadSnapshot();
   EXPECT_STREQ(unsupportedDeviceKind(s, "synthcover"), "cover");
   EXPECT_EQ(unsupportedDeviceKind(s, "synth2gang"), nullptr);
-  EXPECT_EQ(zhaDeviceIds(s).size(), 10u);
+  EXPECT_EQ(zhaDeviceIds(s).size(), 11u);
 }
 
 TEST_F(ZhaMapperTest, LightAsRelay) {
@@ -314,6 +314,27 @@ TEST_F(ZhaMapperTest, TemperatureHumidityInFahrenheit) {
                 {{"device_class", "humidity"}, {"unit_of_measurement", "%"}}));
   ASSERT_EQ(states.size(), 1u);
   EXPECT_DOUBLE_EQ(states[0].second.secondary, 48.2);
+}
+
+TEST_F(ZhaMapperTest, ValveWithFlowSensor) {
+  auto *d = findDevice(devices, "0xaabbccddee000005");
+  ASSERT_NE(d, nullptr);
+  EXPECT_EQ(d->descriptor.batteryPowered, 1);
+  ASSERT_EQ(d->descriptor.channels.size(), 2u);
+  EXPECT_EQ(d->descriptor.channels[0].kind, ChannelKind::Relay);
+  const ChannelSpec &flow = d->descriptor.channels[1];
+  EXPECT_EQ(flow.kind, ChannelKind::GeneralPurposeMeasurement);
+  EXPECT_EQ(flow.key, "flow");
+  EXPECT_EQ(flow.caption, "przepływ");
+  EXPECT_EQ(flow.unit, "m³/h");
+  EXPECT_EQ(flow.precision, 2);
+
+  auto states = extractStates(*d, state("sensor.zawor_flow", "12",
+                                        {{"device_class", "volume_flow_rate"},
+                                         {"unit_of_measurement", "L/min"}}));
+  ASSERT_EQ(states.size(), 1u);
+  EXPECT_EQ(states[0].first, "flow");
+  EXPECT_NEAR(states[0].second.primary, 0.72, 1e-9);
 }
 
 TEST(ZhaAvailabilityTest, UnavailableState) {

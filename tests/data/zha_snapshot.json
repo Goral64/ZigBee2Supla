@@ -175,6 +175,22 @@
    "sw_version": null,
    "disabled_by": "user",
    "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
+  },
+  {
+   "id": "synthvalve",
+   "identifiers": [
+    [
+     "zha",
+     "aa:bb:cc:dd:ee:00:00:05"
+    ]
+   ],
+   "manufacturer": "SONOFF",
+   "model": "SWV",
+   "name": "SONOFF SWV",
+   "name_by_user": "Zawór",
+   "sw_version": null,
+   "disabled_by": null,
+   "via_device_id": "4a66bb1caf3cb74a6fe3dd4f732ca07f"
   }
  ],
  "entity_registry": [
@@ -553,6 +569,30 @@
    "unique_id": "aa:bb:cc:dd:ee:00:00:04-1",
    "entity_category": null,
    "disabled_by": null
+  },
+  {
+   "entity_id": "switch.zawor",
+   "device_id": "synthvalve",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:05-1",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.zawor_flow",
+   "device_id": "synthvalve",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:05-1-1028",
+   "entity_category": null,
+   "disabled_by": null
+  },
+  {
+   "entity_id": "sensor.zawor_battery",
+   "device_id": "synthvalve",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:05-1-1",
+   "entity_category": "diagnostic",
+   "disabled_by": null
   }
  ],
  "states": [
@@ -921,6 +961,33 @@
    "entity_id": "switch.wylaczone",
    "state": "off",
    "attributes": {}
+  },
+  {
+   "entity_id": "switch.zawor",
+   "state": "off",
+   "attributes": {
+    "friendly_name": "Zawór"
+   }
+  },
+  {
+   "entity_id": "sensor.zawor_flow",
+   "state": "0.0",
+   "attributes": {
+    "state_class": "measurement",
+    "unit_of_measurement": "m³/h",
+    "device_class": "volume_flow_rate",
+    "friendly_name": "Zawór Flow"
+   }
+  },
+  {
+   "entity_id": "sensor.zawor_battery",
+   "state": "90.0",
+   "attributes": {
+    "state_class": "measurement",
+    "unit_of_measurement": "%",
+    "device_class": "battery",
+    "friendly_name": "Zawór Battery"
+   }
   }
  ],
  "zha_devices": [
@@ -1000,6 +1067,13 @@
    "manufacturer": "SONOFF",
    "model": "01MINIZB",
    "power_source": "Mains"
+  },
+  {
+   "ieee": "aa:bb:cc:dd:ee:00:00:05",
+   "device_type": "EndDevice",
+   "manufacturer": "SONOFF",
+   "model": "SWV",
+   "power_source": "Battery or Unknown"
   }
  ],
  "triggers": {
