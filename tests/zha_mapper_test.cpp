@@ -320,7 +320,7 @@ TEST_F(ZhaMapperTest, ValveWithFlowSensor) {
   auto *d = findDevice(devices, "0xaabbccddee000005");
   ASSERT_NE(d, nullptr);
   EXPECT_EQ(d->descriptor.batteryPowered, 1);
-  ASSERT_EQ(d->descriptor.channels.size(), 2u);
+  ASSERT_EQ(d->descriptor.channels.size(), 4u);
   EXPECT_EQ(d->descriptor.channels[0].kind, ChannelKind::Relay);
   const ChannelSpec &flow = d->descriptor.channels[1];
   EXPECT_EQ(flow.kind, ChannelKind::GeneralPurposeMeasurement);
@@ -335,6 +335,23 @@ TEST_F(ZhaMapperTest, ValveWithFlowSensor) {
   ASSERT_EQ(states.size(), 1u);
   EXPECT_EQ(states[0].first, "flow");
   EXPECT_NEAR(states[0].second.primary, 0.72, 1e-9);
+
+  // Diagnostic alarms of the valve, by translation key.
+  const ChannelSpec &leak = d->descriptor.channels[2];
+  EXPECT_EQ(leak.kind, ChannelKind::BinarySensor);
+  EXPECT_EQ(leak.key, "water_leak");
+  EXPECT_EQ(leak.defaultFunction, SUPLA_CHANNELFNC_FLOOD_SENSOR);
+  EXPECT_EQ(leak.caption, "wyciek");
+  const ChannelSpec &shortage = d->descriptor.channels[3];
+  EXPECT_EQ(shortage.kind, ChannelKind::BinarySensor);
+  EXPECT_EQ(shortage.key, "water_shortage");
+  EXPECT_EQ(shortage.defaultFunction, SUPLA_CHANNELFNC_BINARY_SENSOR);
+  EXPECT_EQ(shortage.caption, "brak wody");
+  states = extractStates(*d, state("binary_sensor.zawor_water_supply", "on",
+                                   {{"device_class", "problem"}}));
+  ASSERT_EQ(states.size(), 1u);
+  EXPECT_EQ(states[0].first, "water_shortage");
+  EXPECT_DOUBLE_EQ(states[0].second.primary, 1);
 }
 
 TEST(ZhaAvailabilityTest, UnavailableState) {

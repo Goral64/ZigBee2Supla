@@ -1,5 +1,11 @@
 # Zmiany
 
+## 0.4.0-beta.3
+
+- Zawór SONOFF SWV: alarmy wycieku (czujnik zalania) i braku wody (czujnik
+  binarny), z ZHA i z Zigbee2MQTT.
+- Opis, jak pokazać przepływ w L/min (docs/urzadzenia.md).
+
 ## 0.4.0-beta.2
 
 - Opcje `include` i `exclude` przyjmują adres IEEE także w zapisie z Home

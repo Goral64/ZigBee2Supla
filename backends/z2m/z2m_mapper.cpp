@@ -222,6 +222,52 @@ void addMeasurementBindings(const std::vector<Feature> &features,
   }
 }
 
+// Alarms of water valves (SONOFF SWV): "current_device_status" is one of
+// normal_state, water_shortage, water_leakage and
+// "water_shortage & water_leakage".
+void addValveAlarmBindings(const std::vector<Feature> &features,
+                           std::vector<Binding> *bindings) {
+  struct Alarm {
+    const char *key;
+    const char *word;
+    int32_t function;
+    const char *caption;
+  };
+  static const Alarm alarms[] = {
+      {"water_leak", "water_leakage", SUPLA_CHANNELFNC_FLOOD_SENSOR, "wyciek"},
+      {"water_shortage", "water_shortage", SUPLA_CHANNELFNC_BINARY_SENSOR,
+       "brak wody"},
+  };
+  for (const auto &f : features) {
+    const json &def = *f.def;
+    if (!f.parentType.empty() || def.value("type", "") != "enum" ||
+        def.value("property", "") != "current_device_status" ||
+        !(access(def) & kAccessState)) {
+      continue;
+    }
+    const json values = def.value("values", json::array());
+    for (const auto &alarm : alarms) {
+      bool known = false;
+      for (const auto &v : values) {
+        if (v.is_string() &&
+            v.get<std::string>().find(alarm.word) != std::string::npos) {
+          known = true;
+        }
+      }
+      if (!known) continue;
+      Binding b;
+      b.spec.kind = ChannelKind::BinarySensor;
+      b.spec.key = alarm.key;
+      b.spec.defaultFunction = alarm.function;
+      b.spec.caption = alarm.caption;
+      b.property = "current_device_status";
+      b.enumOnWords = {alarm.word};
+      bindings->push_back(b);
+    }
+    return;
+  }
+}
+
 // Supla action of a zigbee2mqtt action name (the part after the button
 // number), 0 when there is none.
 uint32_t actionCap(const std::string &name) {
@@ -547,6 +593,7 @@ std::optional<Device> parseDevice(const json &dev) {
   addEnergyBindings(features, device.descriptor.batteryPowered == 1,
                     &device.bindings);
   addMeasurementBindings(features, &device.bindings);
+  addValveAlarmBindings(features, &device.bindings);
   addActionBindings(features, &device.bindings);
 
   if (device.bindings.empty()) return std::nullopt;
@@ -618,7 +665,15 @@ std::vector<std::pair<std::string, ChannelState>> extractStates(
       case ChannelKind::BinarySensor: {
         if (!payload.contains(b.property)) continue;
         const json &v = payload[b.property];
-        if (v == b.valueOn) {
+        if (!b.enumOnWords.empty()) {
+          if (!v.is_string()) continue;
+          state.primary = 0;
+          for (const auto &word : b.enumOnWords) {
+            if (v.get<std::string>().find(word) != std::string::npos) {
+              state.primary = 1;
+            }
+          }
+        } else if (v == b.valueOn) {
           state.primary = b.invert ? 0 : 1;
         } else if (v == b.valueOff) {
           state.primary = b.invert ? 1 : 0;
