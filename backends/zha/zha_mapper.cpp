@@ -54,6 +54,7 @@ struct Entity {
   std::string domain;
   std::string deviceClass;
   std::string category;  // "", "config" or "diagnostic"
+  std::string translationKey;
   int endpoint = 0;
   const json *state = nullptr;  // state object, if any
 };
@@ -82,6 +83,7 @@ std::vector<Entity> deviceEntities(
     if (entity.id.empty()) continue;
     entity.domain = domainOf(entity.id);
     entity.category = stringOr(e, "entity_category");
+    entity.translationKey = stringOr(e, "translation_key");
     entity.endpoint = endpointOf(stringOr(e, "unique_id"));
     auto it = states.find(entity.id);
     if (it != states.end()) {
@@ -187,6 +189,30 @@ const std::map<std::string, BinarySensorKind> &binarySensorKinds() {
        {"vibration", SUPLA_CHANNELFNC_BINARY_SENSOR, "czujnik drgań", false}},
   };
   return kinds;
+}
+
+// Diagnostic binary sensors bridged anyway, by translation key: alarms of
+// water valves (SONOFF SWV).
+const std::map<std::string, BinarySensorKind> &diagnosticBinarySensorKinds() {
+  static const std::map<std::string, BinarySensorKind> kinds = {
+      {"water_leak",
+       {"water_leak", SUPLA_CHANNELFNC_FLOOD_SENSOR, "wyciek", false}},
+      {"water_supply",
+       {"water_shortage", SUPLA_CHANNELFNC_BINARY_SENSOR, "brak wody", false}},
+  };
+  return kinds;
+}
+
+Binding binarySensorBinding(const BinarySensorKind &kind,
+                            const std::string &entityId) {
+  Binding b;
+  b.spec.kind = ChannelKind::BinarySensor;
+  b.spec.key = kind.key;
+  b.spec.defaultFunction = kind.function;
+  b.spec.caption = kind.caption;
+  b.entityId = entityId;
+  b.invert = kind.invert;
+  return b;
 }
 
 // Measurements shown as general purpose measurement channels: device class,
@@ -432,13 +458,7 @@ std::optional<Device> parseDevice(
     } else if (e.domain == "binary_sensor") {
       auto it = binarySensorKinds().find(e.deviceClass);
       if (it == binarySensorKinds().end()) continue;
-      Binding b;
-      b.spec.kind = ChannelKind::BinarySensor;
-      b.spec.key = it->second.key;
-      b.spec.defaultFunction = it->second.function;
-      b.spec.caption = it->second.caption;
-      b.entityId = e.id;
-      b.invert = it->second.invert;
+      Binding b = binarySensorBinding(it->second, e.id);
       if (keys.insert(b.spec.key).second) device.bindings.push_back(b);
     } else if (e.domain == "sensor" && e.deviceClass == "pressure") {
       Binding b;
@@ -505,6 +525,13 @@ std::optional<Device> parseDevice(
     if (const Entity *e = sensor(entities, m->deviceClass)) {
       device.bindings.push_back(measurementBinding(*m, e->id));
     }
+  }
+  for (const auto &e : entities) {
+    if (e.domain != "binary_sensor" || e.category != "diagnostic") continue;
+    auto it = diagnosticBinarySensorKinds().find(e.translationKey);
+    if (it == diagnosticBinarySensorKinds().end()) continue;
+    Binding b = binarySensorBinding(it->second, e.id);
+    if (keys.insert(b.spec.key).second) device.bindings.push_back(b);
   }
 
   auto triggers = snapshot.triggers.find(device.haDeviceId);

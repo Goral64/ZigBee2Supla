@@ -46,16 +46,18 @@ rozpoznawane po encjach HA:
 
 * `switch` i `light` jako przekaźniki (światła tylko włącz/wyłącz),
 * `binary_sensor` i `sensor` według klasy urządzenia (otwarcie, ruch,
-  zalanie, temperatura, wilgotność, ciśnienie, światło, energia, moc,
-  napięcie, prąd),
+  zalanie, temperatura, wilgotność, ciśnienie, światło, przepływ, energia,
+  moc, napięcie, prąd),
 * `climate` z trybem `heat` jako termometr i termostat,
 * przyciski i piloty z wyzwalaczy urządzenia, tych samych, które HA
   pokazuje w automatyzacjach („Naciśnięto przycisk…”),
 * bateria z encji baterii.
 
 Pomijane są encje konfiguracyjne i diagnostyczne (blokada rodzicielska,
-podświetlenie, firmware) oraz encje wyłączone w HA. Urządzenie z roletą,
-zamkiem albo wentylatorem jest pomijane w całości, jak przy zigbee2mqtt.
+podświetlenie, firmware) oraz encje wyłączone w HA. Wyjątek to alarmy
+zaworu SONOFF SWV: wyciek (czujnik zalania) i brak wody (czujnik binarny).
+Urządzenie z roletą, zamkiem albo wentylatorem jest pomijane w całości,
+jak przy zigbee2mqtt.
 
 Różnice względem zigbee2mqtt:
 

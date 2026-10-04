@@ -24,6 +24,7 @@ udostępnia. Przy ZHA zasady są te same, różnice opisuje [zha.md](zha.md).
 | `power` (W), `voltage` (V), `current` (A) bez `energy` | pomiar ogólny, osobno każda wartość (bez urządzeń bateryjnych) |
 | `illuminance` (lx) | pomiar ogólny „natężenie światła” |
 | `flow` (m³/h, np. zawór SONOFF SWV) | pomiar ogólny „przepływ” |
+| `current_device_status` (zawór SONOFF SWV) | czujnik zalania „wyciek” i czujnik binarny „brak wody” |
 | `action` (przyciski, piloty) | wyzwalacz akcji, osobny kanał na każdy przycisk |
 | `climate` z `current_heating_setpoint` (głowice, termostaty) | termometr + termostat |
 
@@ -98,6 +99,12 @@ ogólnymi czujnikami binarnymi.
 **Pomiar ogólny** (natężenie światła, przepływ, moc, napięcie, prąd bez
 licznika) dostaje domyślną jednostkę i liczbę miejsc po przecinku (np.
 „lx”, „W”) oraz włączoną historię. Ustawienia zmienione w Supla Cloud zostają.
+
+Przepływ jest w m³/h. Żeby mieć go w L/min, w ustawieniach kanału w Supla
+Cloud zmień jednostkę na „L/min” i ustaw mnożnik 1000 oraz dzielnik 60.
+Sama zmiana jednostki zmienia tylko napis, liczby zostają w m³/h. Jednostka
+ustawiona w Home Assistant (przy ZHA) nie ma znaczenia, mostek i tak
+przelicza na m³/h.
 
 ## Licznik energii
 

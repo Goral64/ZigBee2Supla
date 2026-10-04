@@ -441,6 +441,47 @@ TEST(Z2mMapperTest, FlowIsGeneralPurposeMeasurement) {
   EXPECT_DOUBLE_EQ(states[0].second.primary, 0.6);
 }
 
+TEST(Z2mMapperTest, ValveAlarmsFromDeviceStatus) {
+  json valve = deviceWithExposes(json::array(
+      {number("battery", "%", 1, 100), number("flow", "m³/h", 1, 100),
+       json{{"type", "enum"},
+            {"name", "current_device_status"},
+            {"property", "current_device_status"},
+            {"access", 5},
+            {"values",
+             {"normal_state", "water_shortage", "water_leakage",
+              "water_shortage & water_leakage"}}}}));
+  valve["power_source"] = "Battery";
+  auto devices = parseBridgeDevices(json::array({valve}));
+  ASSERT_EQ(devices.size(), 1u);
+  const auto &channels = devices[0].descriptor.channels;
+  ASSERT_EQ(channels.size(), 3u);
+  EXPECT_EQ(channels[0].key, "flow");
+  EXPECT_EQ(channels[1].kind, ChannelKind::BinarySensor);
+  EXPECT_EQ(channels[1].key, "water_leak");
+  EXPECT_EQ(channels[1].defaultFunction, SUPLA_CHANNELFNC_FLOOD_SENSOR);
+  EXPECT_EQ(channels[1].caption, "wyciek");
+  EXPECT_EQ(channels[2].key, "water_shortage");
+  EXPECT_EQ(channels[2].defaultFunction, SUPLA_CHANNELFNC_BINARY_SENSOR);
+  EXPECT_EQ(channels[2].caption, "brak wody");
+
+  auto states = extractStates(
+      devices[0], json::parse(R"({"current_device_status":"water_shortage"})"));
+  ASSERT_EQ(states.size(), 2u);
+  EXPECT_EQ(states[0].first, "water_leak");
+  EXPECT_DOUBLE_EQ(states[0].second.primary, 0);
+  EXPECT_EQ(states[1].first, "water_shortage");
+  EXPECT_DOUBLE_EQ(states[1].second.primary, 1);
+
+  states = extractStates(
+      devices[0],
+      json::parse(
+          R"({"current_device_status":"water_shortage & water_leakage"})"));
+  ASSERT_EQ(states.size(), 2u);
+  EXPECT_DOUBLE_EQ(states[0].second.primary, 1);
+  EXPECT_DOUBLE_EQ(states[1].second.primary, 1);
+}
+
 namespace {
 
 json actionExpose(const std::vector<std::string> &values) {

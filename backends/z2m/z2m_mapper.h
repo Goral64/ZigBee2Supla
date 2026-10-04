@@ -23,6 +23,9 @@ struct Binding {
   // zigbee2mqtt reports contact=true for a closed door, while its expose
   // defines value_on=false; Supla opening sensors use 1 for "closed").
   bool invert = false;
+  // BinarySensor from an enum property: 1 when the value contains any of
+  // these words, 0 for any other value. Empty: valueOn/valueOff are used.
+  std::vector<std::string> enumOnWords;
   // Relay only: the device's own turn-on timer (ChannelSpec::countdown*).
   std::string timerProperty;  // e.g. "countdown", "countdown_l1", "timer"
   uint32_t timerUnitMs = 0;   // 1000 when set in seconds, 60000 in minutes

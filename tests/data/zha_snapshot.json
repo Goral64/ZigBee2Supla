@@ -593,6 +593,24 @@
    "unique_id": "aa:bb:cc:dd:ee:00:00:05-1-1",
    "entity_category": "diagnostic",
    "disabled_by": null
+  },
+  {
+   "entity_id": "binary_sensor.zawor_water_leak",
+   "device_id": "synthvalve",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:05-1-water_leak",
+   "entity_category": "diagnostic",
+   "disabled_by": null,
+   "translation_key": "water_leak"
+  },
+  {
+   "entity_id": "binary_sensor.zawor_water_supply",
+   "device_id": "synthvalve",
+   "platform": "zha",
+   "unique_id": "aa:bb:cc:dd:ee:00:00:05-1-water_supply",
+   "entity_category": "diagnostic",
+   "disabled_by": null,
+   "translation_key": "water_supply"
   }
  ],
  "states": [
@@ -987,6 +1005,22 @@
     "unit_of_measurement": "%",
     "device_class": "battery",
     "friendly_name": "Zawór Battery"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.zawor_water_leak",
+   "state": "off",
+   "attributes": {
+    "device_class": "moisture",
+    "friendly_name": "Zawór Water leak"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.zawor_water_supply",
+   "state": "off",
+   "attributes": {
+    "device_class": "problem",
+    "friendly_name": "Zawór Water supply"
    }
   }
  ],
