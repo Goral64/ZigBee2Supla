@@ -191,3 +191,48 @@ TEST(ChannelTest, ActionTrigger) {
   encodeChannelValue(spec.kind, ChannelState{}, v);
   for (char c : v) EXPECT_EQ(c, 0);
 }
+
+TEST(ChannelTest, Light) {
+  ChannelSpec spec;
+  spec.kind = ChannelKind::Light;
+  EXPECT_EQ(suplaChannelType(spec.kind), SUPLA_CHANNELTYPE_DIMMERANDRGBLED);
+  EXPECT_EQ(suplaDefaultFunction(spec), SUPLA_CHANNELFNC_DIMMER);
+  // Registered in the FuncList field (RGBW_FuncList).
+  EXPECT_EQ(suplaFuncList(spec), SUPLA_RGBW_BIT_FUNC_DIMMER);
+  spec.defaultFunction = SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB;
+  EXPECT_EQ(suplaFuncList(spec), SUPLA_RGBW_BIT_FUNC_DIMMER_CCT_AND_RGB);
+  EXPECT_EQ(suplaChannelFlags(spec), uint64_t{SUPLA_CHANNEL_FLAG_CHANNELSTATE});
+  ChannelKind kind;
+  ASSERT_TRUE(channelKindFromInt(11, &kind));
+  EXPECT_EQ(kind, ChannelKind::Light);
+
+  ChannelState s;
+  s.primary = 1;
+  s.brightness = 0;
+  s.colorBrightness = 64;
+  s.color = 0xFF8000;
+  s.whiteTemperature = 30;
+  char v[8];
+  encodeChannelValue(spec.kind, s, v);
+  TRGBW_Value rgbw;
+  memcpy(&rgbw, v, sizeof(rgbw));
+  EXPECT_EQ(rgbw.brightness, 0);
+  EXPECT_EQ(rgbw.colorBrightness, 64);
+  EXPECT_EQ(rgbw.R, 0xFF);
+  EXPECT_EQ(rgbw.G, 0x80);
+  EXPECT_EQ(rgbw.B, 0);
+  EXPECT_EQ(rgbw.whiteTemperature, 30);
+
+  // An off light keeps its color, without brightness.
+  s.primary = 0;
+  encodeChannelValue(spec.kind, s, v);
+  memcpy(&rgbw, v, sizeof(rgbw));
+  EXPECT_EQ(rgbw.colorBrightness, 0);
+  EXPECT_EQ(rgbw.R, 0xFF);
+
+  ChannelState update;
+  update.brightness = 50;
+  ChannelState merged = mergeState(s, update);
+  EXPECT_DOUBLE_EQ(merged.brightness, 50);
+  EXPECT_DOUBLE_EQ(merged.colorBrightness, 64);
+}

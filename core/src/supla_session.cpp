@@ -1000,14 +1000,84 @@ bool SuplaSession::handleThermostatValue(int channelNumber, const char *value,
   return true;
 }
 
+bool SuplaSession::handleLightValue(int channelNumber, const char *value,
+                                    uint32_t durationMs) {
+  const Channel &channel = channels_[channelNumber];
+  TRGBW_Value rgbw;
+  memcpy(&rgbw, value, sizeof(rgbw));
+  // No SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_SUPPORTED: the server sends values.
+  if (rgbw.command != RGBW_COMMAND_NOT_SET || durationMs != 0) {
+    Z2S_LOG_WARNING("[%s] Channel %d: light command %d rejected", name_.c_str(),
+                    channelNumber, rgbw.command);
+    return false;
+  }
+  auto percent = [](char v) {
+    return static_cast<double>(std::clamp(static_cast<int>(v), 0, 100));
+  };
+  double white = percent(rgbw.brightness);
+  double color = percent(rgbw.colorBrightness);
+  int32_t function = suplaDefaultFunction(channel.spec);
+  bool hasWhite = function != SUPLA_CHANNELFNC_RGBLIGHTING;
+  bool hasColor = function == SUPLA_CHANNELFNC_RGBLIGHTING ||
+                  function == SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB;
+  bool hasTemperature = function == SUPLA_CHANNELFNC_DIMMER_CCT ||
+                        function == SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB;
+  if (!hasWhite) white = 0;
+  if (!hasColor) color = 0;
+  // A ZigBee light shows either white or color light. When Supla asks for
+  // both, the part that was off (or that changed) wins.
+  bool useColor = color > 0;
+  if (white > 0 && color > 0) {
+    const ChannelState &current = channel.state;
+    bool colorShown = current.primary == 1 && current.colorBrightness > 0;
+    bool whiteShown = current.primary == 1 && current.brightness > 0;
+    if (colorShown != whiteShown) {
+      useColor = !colorShown;
+    } else {
+      useColor =
+          color != current.colorBrightness && white == current.brightness;
+    }
+  }
+  double brightness = useColor ? color : white;
+
+  ChannelCommand command;
+  if (brightness == 0) {
+    command.type = ChannelCommand::Type::TurnOff;
+  } else if (rgbw.onOff != 0) {
+    // Turn on from Supla (the server asks for 100 %): the device restores
+    // its own brightness, like supla-device restores the last one.
+    command.type = ChannelCommand::Type::TurnOn;
+  } else {
+    command.type = ChannelCommand::Type::SetLight;
+    command.brightness = brightness;
+    if (useColor) {
+      command.color = (rgbw.R << 16) | (rgbw.G << 8) | rgbw.B;
+    } else if (hasTemperature) {
+      command.whiteTemperature = percent(rgbw.whiteTemperature);
+    }
+  }
+  Z2S_LOG_INFO("[%s] Channel %d: light %s requested", name_.c_str(),
+               channelNumber,
+               command.type == ChannelCommand::Type::TurnOff ? "OFF"
+               : command.type == ChannelCommand::Type::TurnOn
+                   ? "ON"
+                   : (useColor ? "color" : "white"));
+  return handler_(channelNumber, command);
+}
+
 void SuplaSession::handleNewValue(int channelNumber, const char *value,
                                   uint32_t durationMs, int senderId,
                                   bool fromGroup) {
   bool success = false;
   if (channelNumber >= 0 &&
       static_cast<size_t>(channelNumber) < channels_.size() &&
-      channels_[channelNumber].spec.kind == ChannelKind::Thermostat &&
+      channels_[channelNumber].spec.kind == ChannelKind::Light &&
       !isChannelOffline(channels_[channelNumber]) && handler_) {
+    success = handleLightValue(channelNumber, value, durationMs);
+  } else if (channelNumber >= 0 &&
+             static_cast<size_t>(channelNumber) < channels_.size() &&
+             channels_[channelNumber].spec.kind == ChannelKind::Thermostat &&
+             !isChannelOffline(channels_[channelNumber]) && handler_) {
     success = handleThermostatValue(channelNumber, value, durationMs);
   } else if (channelNumber >= 0 &&
              static_cast<size_t>(channelNumber) < channels_.size() &&

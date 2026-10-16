@@ -887,6 +887,131 @@ TEST_F(SessionTest, ThermostatCommands) {
   EXPECT_EQ(lastValue().Mode, SUPLA_HVAC_MODE_OFF);
 }
 
+namespace {
+
+void configureLight(SuplaSession *session, DeviceIdentity *identity,
+                    int32_t function) {
+  ChannelSpec light;
+  light.kind = ChannelKind::Light;
+  light.key = "state";
+  light.defaultFunction = function;
+  identity->channels = {light};
+  session->configure(*identity, makeDescriptor(*identity, "Lampa"));
+  session->setChannelPresent(0, true);
+}
+
+ChannelState lightState(double on, double white, double color) {
+  ChannelState s;
+  s.primary = on;
+  s.brightness = white;
+  s.colorBrightness = color;
+  s.whiteTemperature = 50;
+  s.color = 0x00FF00;
+  return s;
+}
+
+void sendRgbwValue(FakeSuplaServer *server, FakeConnection *conn, int white,
+                   int color, uint32_t rgb, int temperature, int onOff = 0,
+                   int command = RGBW_COMMAND_NOT_SET) {
+  TRGBW_Value rgbw = {};
+  rgbw.brightness = static_cast<char>(white);
+  rgbw.colorBrightness = static_cast<char>(color);
+  rgbw.R = static_cast<unsigned char>(rgb >> 16);
+  rgbw.G = static_cast<unsigned char>(rgb >> 8);
+  rgbw.B = static_cast<unsigned char>(rgb);
+  rgbw.onOff = static_cast<char>(onOff);
+  rgbw.command = static_cast<char>(command);
+  rgbw.whiteTemperature = static_cast<char>(temperature);
+  char value[8];
+  memcpy(value, &rgbw, sizeof(rgbw));
+  server->sendSetValueRaw(conn, 0, 41, value);
+}
+
+}  // namespace
+
+TEST_F(SessionTest, LightRegistersAsRgbwChannel) {
+  configureLight(&session_, &identity_, SUPLA_CHANNELFNC_DIMMER_CCT);
+  session_.setChannelState(0, lightState(1, 40, NAN));
+  run(5);
+  ASSERT_TRUE(session_.isRegistered());
+  const auto &channel = conn().registrations[0].channels[0];
+  EXPECT_EQ(channel.Type, SUPLA_CHANNELTYPE_DIMMERANDRGBLED);
+  EXPECT_EQ(channel.Default, SUPLA_CHANNELFNC_DIMMER_CCT);
+  EXPECT_EQ(channel.RGBW_FuncList,
+            static_cast<unsigned>(SUPLA_RGBW_BIT_FUNC_DIMMER_CCT));
+  EXPECT_EQ(channel.Offline, SUPLA_CHANNEL_OFFLINE_FLAG_ONLINE);
+  TRGBW_Value rgbw;
+  memcpy(&rgbw, channel.value, sizeof(rgbw));
+  EXPECT_EQ(rgbw.brightness, 40);
+  EXPECT_EQ(rgbw.whiteTemperature, 50);
+}
+
+TEST_F(SessionTest, LightCommands) {
+  std::vector<ChannelCommand> commands;
+  session_.setCommandHandler([&](int, const ChannelCommand &cmd) {
+    commands.push_back(cmd);
+    return true;
+  });
+  configureLight(&session_, &identity_, SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB);
+  session_.setChannelState(0, lightState(1, 40, 0));
+  run(5);
+  ASSERT_TRUE(session_.isRegistered());
+
+  // Turn on/off from Supla: the device keeps its own brightness.
+  sendRgbwValue(&server_, &conn(), 100, 100, 0x00FF00, 50,
+                RGBW_BRIGHTNESS_ONOFF | RGBW_COLOR_ONOFF);
+  sendRgbwValue(&server_, &conn(), 0, 0, 0x00FF00, 50,
+                RGBW_BRIGHTNESS_ONOFF | RGBW_COLOR_ONOFF);
+  run(3);
+  ASSERT_EQ(commands.size(), 2u);
+  EXPECT_EQ(commands[0].type, ChannelCommand::Type::TurnOn);
+  EXPECT_EQ(commands[1].type, ChannelCommand::Type::TurnOff);
+
+  // White light shown, color brightness set in the app: color light.
+  sendRgbwValue(&server_, &conn(), 40, 70, 0xFF0000, 50);
+  run(3);
+  ASSERT_EQ(commands.size(), 3u);
+  EXPECT_EQ(commands[2].type, ChannelCommand::Type::SetLight);
+  EXPECT_DOUBLE_EQ(commands[2].brightness, 70);
+  EXPECT_EQ(commands[2].color, 0xFF0000);
+  EXPECT_TRUE(std::isnan(commands[2].whiteTemperature));
+
+  // White brightness and temperature.
+  sendRgbwValue(&server_, &conn(), 60, 0, 0xFF0000, 30);
+  run(3);
+  ASSERT_EQ(commands.size(), 4u);
+  EXPECT_EQ(commands[3].type, ChannelCommand::Type::SetLight);
+  EXPECT_DOUBLE_EQ(commands[3].brightness, 60);
+  EXPECT_DOUBLE_EQ(commands[3].whiteTemperature, 30);
+  EXPECT_EQ(commands[3].color, -1);
+
+  // RGBW commands are not declared (no SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_...).
+  sendRgbwValue(&server_, &conn(), 0, 0, 0, 0, 0, RGBW_COMMAND_TURN_ON_DIMMER);
+  run(3);
+  EXPECT_EQ(commands.size(), 4u);
+  ASSERT_EQ(conn().setResults.size(), 5u);
+  EXPECT_EQ(conn().setResults[3].success, 1);
+  EXPECT_EQ(conn().setResults[4].success, 0);
+}
+
+TEST_F(SessionTest, DimmerIgnoresColor) {
+  std::vector<ChannelCommand> commands;
+  session_.setCommandHandler([&](int, const ChannelCommand &cmd) {
+    commands.push_back(cmd);
+    return true;
+  });
+  configureLight(&session_, &identity_, SUPLA_CHANNELFNC_DIMMER);
+  session_.setChannelState(0, lightState(0, 0, NAN));
+  run(5);
+  sendRgbwValue(&server_, &conn(), 25, 80, 0xFF0000, 10);
+  run(3);
+  ASSERT_EQ(commands.size(), 1u);
+  EXPECT_EQ(commands[0].type, ChannelCommand::Type::SetLight);
+  EXPECT_DOUBLE_EQ(commands[0].brightness, 25);
+  EXPECT_EQ(commands[0].color, -1);
+  EXPECT_TRUE(std::isnan(commands[0].whiteTemperature));
+}
+
 // --- Gateway ----------------------------------------------------------------
 
 namespace {
@@ -1217,4 +1342,52 @@ TEST_F(GatewayTest, ButtonActionReachesSupla) {
   run(3);
   ASSERT_EQ(conn.actions.size(), 1u);
   EXPECT_EQ(conn.actions[0].action, SUPLA_ACTION_CAP_HOLD);
+}
+
+TEST_F(GatewayTest, LightRegisteredAsRelayStaysRelay) {
+  DeviceDescriptor d;
+  d.id = "0x0000000000000051";
+  d.name = "Lampa";
+  ChannelSpec relay;
+  relay.kind = ChannelKind::Relay;
+  relay.key = "state";
+  relay.defaultFunction = SUPLA_CHANNELFNC_LIGHTSWITCH;
+  d.channels.push_back(relay);
+  gateway_->onDeviceList({d});
+
+  // The bridge now sees both lamps as dimmable.
+  DeviceDescriptor fresh = d;
+  fresh.id = "0x0000000000000052";
+  fresh.name = "Nowa lampa";
+  fresh.channels[0].kind = ChannelKind::Light;
+  fresh.channels[0].defaultFunction = SUPLA_CHANNELFNC_DIMMER_CCT;
+  d.channels[0] = fresh.channels[0];
+  gateway_->onDeviceList({d, fresh});
+  gateway_->onChannelState(d.id, "state", lightState(1, 40, NAN));
+  gateway_->onChannelState(fresh.id, "state", lightState(1, 40, NAN));
+  run(30);
+  ASSERT_EQ(gateway_->registeredCount(), 2u);
+  for (auto &conn : server_.connections) {
+    ASSERT_EQ(conn->registrations.size(), 1u);
+    const auto &reg = conn->registrations[0];
+    ASSERT_EQ(reg.channels.size(), 1u);
+    const auto &channel = reg.channels[0];
+    if (reg.name == "Lampa") {
+      EXPECT_EQ(channel.Type, SUPLA_CHANNELTYPE_RELAY);
+      EXPECT_EQ(channel.Default, SUPLA_CHANNELFNC_LIGHTSWITCH);
+      EXPECT_EQ(channel.value[0], 1);
+    } else {
+      EXPECT_EQ(channel.Type, SUPLA_CHANNELTYPE_DIMMERANDRGBLED);
+      EXPECT_EQ(channel.Default, SUPLA_CHANNELFNC_DIMMER_CCT);
+      EXPECT_EQ(channel.value[0], 40);
+    }
+  }
+  const DeviceIdentity *old = store_->find(d.id);
+  ASSERT_NE(old, nullptr);
+  ASSERT_EQ(old->channels.size(), 1u);
+  EXPECT_EQ(old->channels[0].kind, ChannelKind::Relay);
+  const DeviceIdentity *added = store_->find(fresh.id);
+  ASSERT_NE(added, nullptr);
+  ASSERT_EQ(added->channels.size(), 1u);
+  EXPECT_EQ(added->channels[0].kind, ChannelKind::Light);
 }

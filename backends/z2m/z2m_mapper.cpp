@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <map>
 
 namespace z2s::z2m {
@@ -76,6 +77,132 @@ std::string relayCaption(const std::string &parentType,
     caption += " " + endpoint;
   }
   return caption;
+}
+
+// Dimmable lights: a "light" expose with a settable brightness is one light
+// channel, keyed by its state property like a relay. Its function depends
+// on what else the light can set: white temperature, color or both. Lights
+// without brightness stay relays. Returns the bindings by state property.
+std::map<std::string, Binding> lightBindings(const json &exposes) {
+  std::map<std::string, Binding> result;
+  if (!exposes.is_array()) return result;
+  for (const auto &expose : exposes) {
+    if (!expose.is_object() || expose.value("type", "") != "light" ||
+        !expose.contains("features") || !expose["features"].is_array()) {
+      continue;
+    }
+    const json *state = nullptr;
+    const json *brightness = nullptr;
+    const json *colorTemp = nullptr;
+    const json *color = nullptr;
+    for (const auto &f : expose["features"]) {
+      if (!f.is_object() || !(access(f) & kAccessSet) ||
+          f.value("property", "").empty()) {
+        continue;
+      }
+      const std::string name = f.value("name", "");
+      const std::string type = f.value("type", "");
+      if (name == "state" && type == "binary") {
+        state = &f;
+      } else if (name == "brightness" && type == "numeric") {
+        brightness = &f;
+      } else if (name == "color_temp" && type == "numeric" &&
+                 f.value("value_max", 0.0) > f.value("value_min", 0.0)) {
+        colorTemp = &f;
+      } else if ((name == "color_xy" || name == "color_hs") &&
+                 type == "composite") {
+        color = &f;
+      }
+    }
+    if (state == nullptr || brightness == nullptr) continue;
+    Binding b;
+    b.spec.kind = ChannelKind::Light;
+    b.property = state->value("property", "");
+    b.spec.key = b.property;
+    b.spec.caption = relayCaption("light", b.property);
+    b.valueOn = state->value("value_on", json("ON"));
+    b.valueOff = state->value("value_off", json("OFF"));
+    b.brightnessProperty = brightness->value("property", "");
+    b.brightnessMax = brightness->value("value_max", 254.0);
+    if (b.brightnessMax < 1) b.brightnessMax = 254;
+    if (colorTemp != nullptr) {
+      b.colorTempProperty = colorTemp->value("property", "");
+      b.colorTempMin = colorTemp->value("value_min", 0.0);
+      b.colorTempMax = colorTemp->value("value_max", 0.0);
+    }
+    if (color != nullptr) b.colorProperty = color->value("property", "");
+    // "state_l1" -> "color_mode_l1"
+    b.colorModeProperty = "color_mode" + b.property.substr(5);
+    if (colorTemp != nullptr && color != nullptr) {
+      b.spec.defaultFunction = SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB;
+    } else if (color != nullptr) {
+      b.spec.defaultFunction = SUPLA_CHANNELFNC_RGBLIGHTING;
+    } else if (colorTemp != nullptr) {
+      b.spec.defaultFunction = SUPLA_CHANNELFNC_DIMMER_CCT;
+    } else {
+      b.spec.defaultFunction = SUPLA_CHANNELFNC_DIMMER;
+    }
+    result[b.property] = b;
+  }
+  return result;
+}
+
+// sRGB component (0..1) of a linear one.
+double gammaCorrected(double v) {
+  return v <= 0.0031308 ? 12.92 * v : 1.055 * std::pow(v, 1 / 2.4) - 0.055;
+}
+
+// 0xRRGGBB of a color at full brightness, from linear components.
+int32_t packRgb(double r, double g, double b) {
+  double max = std::max({r, g, b});
+  if (!(max > 0)) return 0xFFFFFF;
+  auto c = [max](double v) {
+    return static_cast<int32_t>(
+        std::lround(std::clamp(v / max, 0.0, 1.0) * 255.0));
+  };
+  return (c(r) << 16) | (c(g) << 8) | c(b);
+}
+
+// Color of a CIE 1931 x/y point (sRGB, D65), as zigbee2mqtt converts it.
+int32_t xyToRgb(double x, double y) {
+  if (!(y > 0)) return 0xFFFFFF;
+  double X = x / y;
+  double Z = (1 - x - y) / y;
+  double r = X * 3.2404542 - 1.5371385 - Z * 0.4985314;
+  double g = -X * 0.969266 + 1.8760108 + Z * 0.041556;
+  double b = X * 0.0556434 - 0.2040259 + Z * 1.0572252;
+  return packRgb(gammaCorrected(std::max(r, 0.0)),
+                 gammaCorrected(std::max(g, 0.0)),
+                 gammaCorrected(std::max(b, 0.0)));
+}
+
+// Color of a hue [°] and saturation [%].
+int32_t hsToRgb(double hue, double saturation) {
+  double h = std::fmod(std::fmod(hue, 360.0) + 360.0, 360.0) / 60.0;
+  double s = std::clamp(saturation / 100.0, 0.0, 1.0);
+  double x = s * (1 - std::fabs(std::fmod(h, 2.0) - 1));
+  double r = 0, g = 0, b = 0;
+  switch (static_cast<int>(h)) {
+    case 0:
+      r = s, g = x;
+      break;
+    case 1:
+      r = x, g = s;
+      break;
+    case 2:
+      g = s, b = x;
+      break;
+    case 3:
+      g = x, b = s;
+      break;
+    case 4:
+      r = x, b = s;
+      break;
+    default:
+      r = s, b = x;
+      break;
+  }
+  return packRgb(r + 1 - s, g + 1 - s, b + 1 - s);
 }
 
 // A top level numeric feature that can be set.
@@ -311,6 +438,44 @@ void splitAction(const std::string &value, std::string *button,
   }
 }
 
+// Two-button dimmer remotes (e.g. IKEA RODRET E2201, TRADFRI E1743) report
+// "on"/"off" for a press and "brightness_move_up"/"_down" for holding the
+// button: a button channel each, with a short press and a hold.
+// "brightness_stop" (release) is ignored.
+bool addOnOffButtonBindings(const json &values,
+                            std::vector<Binding> *bindings) {
+  struct Button {
+    const char *key;
+    const char *caption;
+    const char *press;
+    const char *hold;
+  };
+  static const Button buttons[] = {
+      {"action_on", "przycisk włącz", "on", "brightness_move_up"},
+      {"action_off", "przycisk wyłącz", "off", "brightness_move_down"},
+  };
+  for (const auto &button : buttons) {
+    for (const char *value : {button.press, button.hold}) {
+      if (std::find(values.begin(), values.end(), json(value)) ==
+          values.end()) {
+        return false;
+      }
+    }
+  }
+  for (const auto &button : buttons) {
+    Binding b;
+    b.spec.kind = ChannelKind::ActionTrigger;
+    b.spec.key = button.key;
+    b.spec.caption = button.caption;
+    b.spec.actionCaps = SUPLA_ACTION_CAP_SHORT_PRESS_x1 | SUPLA_ACTION_CAP_HOLD;
+    b.property = "action";
+    b.actions[button.press] = SUPLA_ACTION_CAP_SHORT_PRESS_x1;
+    b.actions[button.hold] = SUPLA_ACTION_CAP_HOLD;
+    bindings->push_back(b);
+  }
+  return true;
+}
+
 // Buttons and remotes: one action trigger channel per button ("action" or
 // "action_<n>"), with the actions it reports. Values without a Supla
 // counterpart (e.g. "brightness_move_up", "release") are ignored.
@@ -323,6 +488,7 @@ void addActionBindings(const std::vector<Feature> &features,
         !def["values"].is_array()) {
       continue;
     }
+    if (addOnOffButtonBindings(def["values"], bindings)) return;
     std::map<std::string, Binding> buttons;  // ordered by button number
     for (const auto &v : def["values"]) {
       if (!v.is_string()) continue;
@@ -509,6 +675,7 @@ std::optional<Device> parseDevice(const json &dev) {
 
   const json *temperature = nullptr;
   const json *humidity = nullptr;
+  const auto lights = lightBindings(definition.value("exposes", json()));
 
   for (const auto &feature : features) {
     const json &def = *feature.def;
@@ -519,6 +686,11 @@ std::optional<Device> parseDevice(const json &dev) {
 
     if ((feature.parentType == "switch" || feature.parentType == "light") &&
         name == "state" && type == "binary" && (access(def) & kAccessSet)) {
+      auto light = lights.find(property);
+      if (feature.parentType == "light" && light != lights.end()) {
+        device.bindings.push_back(light->second);
+        continue;
+      }
       Binding b;
       b.spec.kind = ChannelKind::Relay;
       b.spec.key = property;
@@ -597,14 +769,17 @@ std::optional<Device> parseDevice(const json &dev) {
   addActionBindings(features, &device.bindings);
 
   if (device.bindings.empty()) return std::nullopt;
+  // Lights too: a light registered as a relay stays one (Gateway).
+  auto switchable = [](const Binding &b) {
+    return b.spec.kind == ChannelKind::Relay ||
+           b.spec.kind == ChannelKind::Light;
+  };
   int relayCount = 0;
   for (const auto &b : device.bindings) {
-    if (b.spec.kind == ChannelKind::Relay) relayCount++;
+    if (switchable(b)) relayCount++;
   }
   for (auto &b : device.bindings) {
-    if (b.spec.kind == ChannelKind::Relay) {
-      findRelayTimer(features, relayCount, &b);
-    }
+    if (switchable(b)) findRelayTimer(features, relayCount, &b);
   }
   for (const auto &b : device.bindings) {
     device.descriptor.channels.push_back(b.spec);
@@ -711,6 +886,53 @@ std::vector<std::pair<std::string, ChannelState>> extractStates(
         if (isEmpty(state)) continue;
         break;
       }
+      case ChannelKind::Light: {
+        if (payload.contains(b.property)) {
+          const json &v = payload[b.property];
+          if (v == b.valueOn) state.primary = 1;
+          if (v == b.valueOff) state.primary = 0;
+        }
+        bool hasColor = !b.colorProperty.empty();
+        bool colorMode = hasColor && b.colorTempProperty.empty();
+        if (hasColor && payload.contains(b.colorModeProperty) &&
+            payload[b.colorModeProperty].is_string()) {
+          colorMode = payload[b.colorModeProperty] != "color_temp";
+        }
+        double level = numberOrNan(payload, b.brightnessProperty);
+        if (!std::isnan(level)) {
+          level = level <= 0
+                      ? 0
+                      : std::clamp(std::round(level * 100.0 / b.brightnessMax),
+                                   1.0, 100.0);
+          state.brightness = colorMode ? 0 : level;
+          if (hasColor) state.colorBrightness = colorMode ? level : 0;
+        }
+        double mired = numberOrNan(payload, b.colorTempProperty);
+        if (!std::isnan(mired) && b.colorTempMax > b.colorTempMin) {
+          state.whiteTemperature =
+              std::round(std::clamp((b.colorTempMax - mired) /
+                                        (b.colorTempMax - b.colorTempMin),
+                                    0.0, 1.0) *
+                         100.0);
+        }
+        if (hasColor && payload.contains(b.colorProperty) &&
+            payload[b.colorProperty].is_object()) {
+          const json &c = payload[b.colorProperty];
+          double hue = numberOrNan(c, "hue");
+          double saturation = numberOrNan(c, "saturation");
+          double x = numberOrNan(c, "x");
+          double y = numberOrNan(c, "y");
+          bool hs = payload.value(b.colorModeProperty, json()) == "hs";
+          if (!std::isnan(hue) && !std::isnan(saturation) &&
+              (hs || std::isnan(x) || std::isnan(y))) {
+            state.color = hsToRgb(hue, saturation);
+          } else if (!std::isnan(x) && !std::isnan(y)) {
+            state.color = xyToRgb(x, y);
+          }
+        }
+        if (isEmpty(state)) continue;
+        break;
+      }
       case ChannelKind::ElectricityMeter:
         state.primary = numberOrNan(payload, b.property);
         state.power = numberOrNan(payload, b.powerProperty);
@@ -793,8 +1015,30 @@ std::vector<json> buildCommand(const Device &device,
       }
       return messages;
     }
-    if (b.spec.kind != ChannelKind::Relay ||
-        command.type == ChannelCommand::Type::SetThermostat) {
+    if (b.spec.kind == ChannelKind::Light &&
+        command.type == ChannelCommand::Type::SetLight) {
+      json set = json::object();
+      set[b.property] = b.valueOn;
+      set[b.brightnessProperty] =
+          std::clamp(std::round(command.brightness * b.brightnessMax / 100.0),
+                     1.0, b.brightnessMax);
+      if (!std::isnan(command.whiteTemperature) &&
+          !b.colorTempProperty.empty()) {
+        set[b.colorTempProperty] = std::round(
+            b.colorTempMax - std::clamp(command.whiteTemperature, 0.0, 100.0) /
+                                 100.0 * (b.colorTempMax - b.colorTempMin));
+      }
+      if (command.color >= 0 && !b.colorProperty.empty()) {
+        set[b.colorProperty] = {{"r", (command.color >> 16) & 0xFF},
+                                {"g", (command.color >> 8) & 0xFF},
+                                {"b", command.color & 0xFF}};
+      }
+      return {set};
+    }
+    if ((b.spec.kind != ChannelKind::Relay &&
+         b.spec.kind != ChannelKind::Light) ||
+        (command.type != ChannelCommand::Type::TurnOn &&
+         command.type != ChannelCommand::Type::TurnOff)) {
       continue;
     }
     bool on = command.type == ChannelCommand::Type::TurnOn;

@@ -150,6 +150,8 @@ class SuplaSession {
   void pushChannelConfigs();
   bool handleThermostatValue(int channelNumber, const char *value,
                              uint32_t durationMs);
+  bool handleLightValue(int channelNumber, const char *value,
+                        uint32_t durationMs);
   void handleNewValue(int channelNumber, const char *value, uint32_t durationMs,
                       int senderId, bool fromGroup);
   bool isChannelOffline(const Channel &channel) const;

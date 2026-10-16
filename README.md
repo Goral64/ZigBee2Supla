@@ -17,6 +17,7 @@ Sprawdzone urządzenia i ograniczenia opisuje rozdział
 
 * przekaźniki (gniazdka, przełączniki, światła), także wielokanałowe,
   z włączaniem na czas, jeśli urządzenie ma timer,
+* światła ze ściemnianiem, barwą bieli i kolorem (przy zigbee2mqtt),
 * termometry, higrometry, ciśnienie, czujniki otwarcia, ruchu, obecności,
   zalania, dymu, gazu, CO i drgań, natężenie światła,
 * liczniki energii gniazdek (energia, moc, napięcie, prąd) powiązane
@@ -130,7 +131,7 @@ wartość z pliku (np. hasło z sekretu Dockera).
 | `supla_security_level` | `0` | `0` – certyfikat CA Supli (Supla Cloud), `3` – przypięty certyfikat z `supla_ca_file` (własny serwer), `1` – inny CA z `supla_ca_file`, `2` – bez weryfikacji (tylko zaufana sieć lokalna); zob. [docs/docker.md](docs/docker.md#5-certyfikat-serwera) |
 | `supla_ca_file` | | plik PEM (dla poziomów `1` i `3`) |
 | `supla_port` | `2016` | port serwera Supli |
-| `supla_proto_version` | `27` | wersja protokołu Supli (27–29) |
+| `supla_proto_version` | `28` | wersja protokołu Supli (28–29) |
 | `mqtt_host`, `mqtt_port` | `localhost`, `1883` | broker MQTT |
 | `mqtt_username`, `mqtt_password` | | dane logowania MQTT |
 | `mqtt_client_id` | `zigbee2supla-<nazwa hosta>` | identyfikator klienta MQTT; dwie instancje mostka przy jednym brokerze muszą mieć różne (broker rozłącza klienta, gdy połączy się inny z tym samym identyfikatorem) |
@@ -166,9 +167,9 @@ w sieci ponad 100 urządzeń:
 | przyciski | Tuya TS0041 |
 | termostaty | głowice Tuya TS0601, termostat ścienny Moes BHT-002 |
 
-Czujniki temperatury, wilgotności i ciśnienia, piloty wieloprzyciskowe
-i czujniki dymu, gazu i CO są sprawdzone tylko testami, bez prawdziwych
-urządzeń.
+Czujniki temperatury, wilgotności i ciśnienia, piloty wieloprzyciskowe,
+czujniki dymu, gazu i CO oraz światła ze ściemnianiem i kolorem są
+sprawdzone tylko testami, bez prawdziwych urządzeń.
 
 Sprawdzone sposoby uruchomienia: dodatek Home Assistant (z repozytorium),
 kontener Docker na osobnej maszynie, usługa w supla-docker oraz zestaw
@@ -179,7 +180,7 @@ ZHA jako źródło urządzeń działa na osobnym Home Assistant z kilkoma
 urządzeniami (ZBMINI, gniazdko TS011F, SNZB-04, przycisk TS0041, głowica
 TS0601), na razie tylko z udawanym serwerem Supli.
 
-**Jeszcze nie ma:** ściemniania i koloru świateł, rolet, zamków,
+**Jeszcze nie ma:** ściemniania świateł przy ZHA, rolet, zamków,
 wentylatorów, harmonogramu tygodniowego Supli dla termostatów (działa
 program samego urządzenia), zerowania licznika energii.
 

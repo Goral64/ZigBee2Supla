@@ -50,6 +50,8 @@ const char *toString(ChannelKind kind) {
       return "action_trigger";
     case ChannelKind::Thermostat:
       return "thermostat";
+    case ChannelKind::Light:
+      return "light";
   }
   return "unknown";
 }
@@ -66,6 +68,7 @@ bool channelKindFromInt(int value, ChannelKind *out) {
     case static_cast<int>(ChannelKind::GeneralPurposeMeasurement):
     case static_cast<int>(ChannelKind::ActionTrigger):
     case static_cast<int>(ChannelKind::Thermostat):
+    case static_cast<int>(ChannelKind::Light):
       *out = static_cast<ChannelKind>(value);
       return true;
   }
@@ -94,6 +97,10 @@ int32_t suplaChannelType(ChannelKind kind) {
       return SUPLA_CHANNELTYPE_ACTIONTRIGGER;
     case ChannelKind::Thermostat:
       return SUPLA_CHANNELTYPE_HVAC;
+    case ChannelKind::Light:
+      // As in supla-device (LightingPwmBase): one type for all lights, the
+      // function list says what the light can do.
+      return SUPLA_CHANNELTYPE_DIMMERANDRGBLED;
   }
   return 0;
 }
@@ -111,6 +118,20 @@ int32_t suplaFuncList(const ChannelSpec &spec) {
   }
   if (spec.kind == ChannelKind::Thermostat) {
     return SUPLA_BIT_FUNC_HVAC_THERMOSTAT;
+  }
+  // Same field of the registration (RGBW_FuncList): only the function of
+  // the light, since a ZigBee light cannot be wired differently.
+  if (spec.kind == ChannelKind::Light) {
+    switch (suplaDefaultFunction(spec)) {
+      case SUPLA_CHANNELFNC_DIMMER_CCT:
+        return SUPLA_RGBW_BIT_FUNC_DIMMER_CCT;
+      case SUPLA_CHANNELFNC_RGBLIGHTING:
+        return SUPLA_RGBW_BIT_FUNC_RGB_LIGHTING;
+      case SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB:
+        return SUPLA_RGBW_BIT_FUNC_DIMMER_CCT_AND_RGB;
+      default:
+        return SUPLA_RGBW_BIT_FUNC_DIMMER;
+    }
   }
   return 0;
 }
@@ -166,6 +187,8 @@ int32_t suplaDefaultFunction(const ChannelSpec &spec) {
       return SUPLA_CHANNELFNC_ACTIONTRIGGER;
     case ChannelKind::Thermostat:
       return SUPLA_CHANNELFNC_HVAC_THERMOSTAT;
+    case ChannelKind::Light:
+      return SUPLA_CHANNELFNC_DIMMER;
   }
   return 0;
 }
@@ -175,7 +198,9 @@ bool isEmpty(const ChannelState &state) {
          std::isnan(state.power) && std::isnan(state.voltage) &&
          std::isnan(state.current) && std::isnan(state.mode) &&
          std::isnan(state.heating) && std::isnan(state.valve) &&
-         std::isnan(state.program);
+         std::isnan(state.program) && std::isnan(state.brightness) &&
+         std::isnan(state.colorBrightness) &&
+         std::isnan(state.whiteTemperature) && std::isnan(state.color);
 }
 
 bool encodeElectricityMeterExtendedValue(const ChannelState &state,
@@ -296,6 +321,27 @@ void encodeChannelValue(ChannelKind kind, const ChannelState &state,
       memcpy(out, &hvac, sizeof(hvac));
       break;
     }
+    case ChannelKind::Light: {
+      // TRGBW_Value, as in supla-device (Channel::setNewValue): an off light
+      // has both brightnesses 0.
+      bool on = !std::isnan(state.primary) && state.primary > 0.5;
+      auto percent = [on](double v) {
+        return on && !std::isnan(v) ? clampRound<char>(v, 0, 100) : char{0};
+      };
+      out[0] = percent(state.brightness);
+      out[1] = percent(state.colorBrightness);
+      if (!std::isnan(state.color)) {
+        auto rgb = static_cast<uint32_t>(
+            clampRound<int64_t>(state.color, 0, 0xFFFFFF));
+        out[2] = static_cast<char>(rgb & 0xFF);
+        out[3] = static_cast<char>((rgb >> 8) & 0xFF);
+        out[4] = static_cast<char>((rgb >> 16) & 0xFF);
+      }
+      if (!std::isnan(state.whiteTemperature)) {
+        out[7] = clampRound<char>(state.whiteTemperature, 0, 100);
+      }
+      break;
+    }
     case ChannelKind::GeneralPurposeMeasurement: {
       // NaN = no reading, as in supla-device.
       double v = state.primary;
@@ -326,6 +372,14 @@ ChannelState mergeState(const ChannelState &current,
   if (!std::isnan(update.heating)) result.heating = update.heating;
   if (!std::isnan(update.valve)) result.valve = update.valve;
   if (!std::isnan(update.program)) result.program = update.program;
+  if (!std::isnan(update.brightness)) result.brightness = update.brightness;
+  if (!std::isnan(update.colorBrightness)) {
+    result.colorBrightness = update.colorBrightness;
+  }
+  if (!std::isnan(update.whiteTemperature)) {
+    result.whiteTemperature = update.whiteTemperature;
+  }
+  if (!std::isnan(update.color)) result.color = update.color;
   return result;
 }
 

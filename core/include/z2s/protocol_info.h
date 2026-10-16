@@ -9,11 +9,13 @@ namespace z2s {
 // Lowest protocol version zigbee2supla can use:
 //  - registration uses SUPLA_DS_CALL_REGISTER_DEVICE_G (protocol >= 25),
 //  - binary sensors use SUPLA_CHANNELFNC_MOTION_SENSOR, _FLOOD_SENSOR and
-//    _BINARY_SENSOR as default functions (protocol >= 27).
-constexpr int kMinProtoVersion = 27;
+//    _BINARY_SENSOR as default functions (protocol >= 27),
+//  - lights declare their functions in RGBW_FuncList and use
+//    SUPLA_CHANNELFNC_DIMMER_CCT and _DIMMER_CCT_AND_RGB (protocol >= 28).
+constexpr int kMinProtoVersion = 28;
 
 // Version used when the configuration does not specify one.
-constexpr int kDefaultProtoVersion = 27;
+constexpr int kDefaultProtoVersion = 28;
 
 // Highest SUPLA_PROTO_VERSION of the vendored supla-common that was reviewed
 // and tested with zigbee2supla. tests/proto_contract_test.cpp fails when
