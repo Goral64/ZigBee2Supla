@@ -1,5 +1,14 @@
 # Zmiany
 
+## 0.4.0-beta.4
+
+- Światła z regulacją jasności (Zigbee2MQTT) są w Supli ściemniaczami,
+  z barwą bieli i kolorem, jeśli lampa je ma. Lampy dodane wcześniej
+  zostają włącznikami.
+- Piloty IKEA RODRET i TRADFRI on/off: dwa przyciski, każdy z krótkim
+  naciśnięciem i przytrzymaniem.
+- Protokół Supli 28 (wymagany).
+
 ## 0.4.0-beta.3
 
 - Zawór SONOFF SWV: alarmy wycieku (czujnik zalania) i braku wody (czujnik
