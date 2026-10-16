@@ -11,7 +11,8 @@ udostępnia. Przy ZHA zasady są te same, różnice opisuje [zha.md](zha.md).
 | zigbee2mqtt | Kanał Supli |
 |---|---|
 | `switch` → `state`, `state_l1`, `state_l2`… | przekaźnik (włącznik zasilania) |
-| `light` → `state` | przekaźnik (włącznik światła) |
+| `light` z `brightness` | ściemniacz, z `color_temp` i kolorem także barwa bieli i RGB |
+| `light` bez `brightness` | przekaźnik (włącznik światła) |
 | `temperature` + `humidity` | termometr z higrometrem |
 | `temperature` | termometr |
 | `humidity` | higrometr |
@@ -86,6 +87,31 @@ Przekaźnik bez timera nie oferuje włączania na czas: mostek nie odlicza
 zamiast urządzenia i takie polecenie odrzuca. Czas dłuższy, niż pozwala
 urządzenie, też jest odrzucany.
 
+## Światła
+
+Światło z regulacją jasności dostaje w Supli kanał ściemniacza. Funkcja
+zależy od tego, co potrafi lampa:
+
+| zigbee2mqtt | Supla |
+|---|---|
+| `brightness` | ściemniacz |
+| `brightness`, `color_temp` | ściemniacz z barwą bieli (CCT) |
+| `brightness`, `color_xy` albo `color_hs` | RGB |
+| wszystko powyżej | ściemniacz CCT i RGB |
+
+Włączenie z Supli przywraca jasność ustawioną ostatnio w lampie. Lampa
+z barwą bieli i kolorem świeci w danej chwili albo na biało, albo
+w kolorze, więc jedna z dwóch jasności w Supli jest zerem; przesunięcie
+drugiego suwaka przełącza lampę. Kolor idzie do zigbee2mqtt jako RGB,
+a lampa zgłasza go z powrotem jako x/y, więc po przeliczeniu może się
+trochę różnić od wybranego.
+
+Lampa, która była już w Supli, zanim mostek obsługiwał ściemnianie, zostaje
+przekaźnikiem (tylko włącz/wyłącz), bo Supla nie pozwala zmienić typu
+kanału. Żeby dostała ściemniacz, zatrzymaj mostek, usuń urządzenie
+w Supla Cloud i wpis z jej adresem IEEE z `identities.json`, a potem
+uruchom mostek. Historia urządzenia przepadnie.
+
 ## Czujniki
 
 Temperatura, wilgotność, ciśnienie i czujniki dwustanowe trafiają do Supli
@@ -138,6 +164,15 @@ na przycisk („przycisk 1”, „przycisk 2”…). Inne wartości (np.
 zachowana przez broker (*retain*) albo z czasu, gdy urządzenie nie było
 połączone z Suplą, nie jest wysyłana: spóźniona akcja uruchomiłaby
 automatyzację w nieoczekiwanej chwili.
+
+Piloty z dwoma przyciskami do ściemniania, które wysyłają `on`, `off`,
+`brightness_move_up` i `brightness_move_down` (np. IKEA RODRET E2201,
+TRADFRI E1743), dostają dwa kanały: „przycisk włącz” i „przycisk
+wyłącz”. Każdy ma krótkie naciśnięcie (`on` / `off`) i przytrzymanie
+(`brightness_move_up` / `brightness_move_down`); puszczenie
+(`brightness_stop`) jest pomijane. Taki pilot dodany do Supli przez
+starszą wersję mostka miał jeden kanał „przycisk”; zostaje on offline,
+a dwa nowe są dopisywane.
 
 ## Termostaty i głowice
 

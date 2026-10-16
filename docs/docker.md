@@ -166,7 +166,7 @@ wielkimi literami. Pełna lista: `docker run --rm <obraz> -h`.
 | `Z2S_SUPLA_PORT` | `2016` | port serwera |
 | `Z2S_SUPLA_SECURITY_LEVEL` | `0` | weryfikacja certyfikatu, rozdział 5 |
 | `Z2S_SUPLA_CA_FILE` | | plik PEM dla poziomu 1 lub 3 |
-| `Z2S_SUPLA_PROTO_VERSION` | `27` | wersja protokołu Supli |
+| `Z2S_SUPLA_PROTO_VERSION` | `28` | wersja protokołu Supli |
 | `Z2S_MQTT_HOST`, `Z2S_MQTT_PORT` | `localhost`, `1883` | broker MQTT |
 | `Z2S_MQTT_USERNAME`, `Z2S_MQTT_PASSWORD` | | logowanie do MQTT |
 | `Z2S_MQTT_CLIENT_ID` | `zigbee2supla-<nazwa hosta>` | identyfikator klienta MQTT; dwie instancje przy jednym brokerze muszą mieć różne |

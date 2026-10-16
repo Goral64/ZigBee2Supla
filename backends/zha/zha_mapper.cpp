@@ -738,6 +738,8 @@ std::vector<std::pair<std::string, ChannelState>> extractStates(
       }
       case ChannelKind::ActionTrigger:
         continue;  // device triggers, not states
+      case ChannelKind::Light:
+        continue;  // ZHA lights are relays
     }
     result.emplace_back(b.spec.key, s);
   }
@@ -824,7 +826,8 @@ std::vector<ServiceCall> buildCommand(const Device &device,
       return calls;
     }
     if (b.spec.kind != ChannelKind::Relay ||
-        command.type == ChannelCommand::Type::SetThermostat) {
+        (command.type != ChannelCommand::Type::TurnOn &&
+         command.type != ChannelCommand::Type::TurnOff)) {
       continue;
     }
     bool on = command.type == ChannelCommand::Type::TurnOn;

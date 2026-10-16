@@ -22,6 +22,9 @@ enum class ChannelKind : int {
   GeneralPurposeMeasurement = 8,
   ActionTrigger = 9,
   Thermostat = 10,
+  // Dimmable light, also with white temperature and/or color (one Supla RGBW
+  // channel; ChannelSpec::defaultFunction says which).
+  Light = 11,
 };
 
 const char *toString(ChannelKind kind);
@@ -87,6 +90,10 @@ struct ChannelSpec {
 //  Thermostat:          primary = setpoint [°C], mode (0 off, 1 heat),
 //                       heating (0/1), valve (opening of the valve [%]),
 //                       program (1 = the device runs its own schedule)
+//  Light:               primary = 0 or 1 (off/on), brightness of white light
+//                       and colorBrightness of color light [0..100] (the
+//                       one not shown is 0), whiteTemperature [0..100]
+//                       (0 warm, 100 cold), color (0xRRGGBB)
 struct ChannelState {
   double primary = NAN;
   double secondary = NAN;
@@ -97,6 +104,10 @@ struct ChannelState {
   double heating = NAN;
   double valve = NAN;
   double program = NAN;
+  double brightness = NAN;
+  double colorBrightness = NAN;
+  double whiteTemperature = NAN;
+  double color = NAN;
 };
 
 // True when no field of the state is known.
@@ -104,7 +115,12 @@ bool isEmpty(const ChannelState &state);
 
 // Command sent from Supla to a device channel.
 struct ChannelCommand {
-  enum class Type { TurnOn, TurnOff, SetThermostat } type = Type::TurnOff;
+  enum class Type {
+    TurnOn,
+    TurnOff,
+    SetThermostat,
+    SetLight
+  } type = Type::TurnOff;
   // TurnOn only: the device turns itself off after this time (a multiple of
   // ChannelSpec::countdownStepMs); 0 = stay on.
   uint32_t durationMs = 0;
@@ -116,6 +132,13 @@ struct ChannelCommand {
   double setpoint = NAN;
   bool manual = false;
   bool program = false;
+  // SetLight only: turns the light on with this brightness [1..100], white
+  // temperature [0..100] (0 warm, 100 cold; NaN = unchanged) and color
+  // (0xRRGGBB at full brightness; -1 = unchanged). TurnOn alone turns it on
+  // with the brightness set in the device.
+  double brightness = NAN;
+  double whiteTemperature = NAN;
+  int32_t color = -1;
 };
 
 // Supla wire level channel parameters (SUPLA_CHANNELTYPE_* etc.).

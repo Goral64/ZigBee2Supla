@@ -108,8 +108,9 @@ TEST(Z2mMapperTest, LightAndMotionSensor) {
   auto *light = findDevice(devices, "Lampa sypialnia");
   ASSERT_NE(light, nullptr);
   ASSERT_EQ(light->descriptor.channels.size(), 1u);
+  EXPECT_EQ(light->descriptor.channels[0].kind, ChannelKind::Light);
   EXPECT_EQ(light->descriptor.channels[0].defaultFunction,
-            SUPLA_CHANNELFNC_LIGHTSWITCH);
+            SUPLA_CHANNELFNC_DIMMER);
 
   auto *motion = findDevice(devices, "Ruch korytarz");
   ASSERT_NE(motion, nullptr);
@@ -698,4 +699,227 @@ TEST(Z2mMapperTest, ThermostatProgram) {
   ASSERT_EQ(devices.size(), 1u);
   EXPECT_TRUE(
       buildCommand(devices[0], "current_heating_setpoint", program).empty());
+}
+
+namespace {
+
+// A light as zigbee2mqtt describes IKEA bulbs and strips (LED2104R3,
+// LED2005R5, L2112): brightness, optionally color temperature and color.
+json ikeaLight(const std::string &ieee, const std::string &name, bool colorTemp,
+               bool color, const std::string &suffix = "") {
+  json features = json::array();
+  features.push_back({{"type", "binary"},
+                      {"name", "state"},
+                      {"property", "state" + suffix},
+                      {"access", 7},
+                      {"value_on", "ON"},
+                      {"value_off", "OFF"},
+                      {"value_toggle", "TOGGLE"}});
+  features.push_back({{"type", "numeric"},
+                      {"name", "brightness"},
+                      {"property", "brightness" + suffix},
+                      {"access", 7},
+                      {"value_min", 0},
+                      {"value_max", 254}});
+  if (colorTemp) {
+    features.push_back({{"type", "numeric"},
+                        {"name", "color_temp"},
+                        {"property", "color_temp" + suffix},
+                        {"access", 7},
+                        {"unit", "mired"},
+                        {"value_min", 250},
+                        {"value_max", 454}});
+    features.push_back({{"type", "numeric"},
+                        {"name", "color_temp_startup"},
+                        {"property", "color_temp_startup" + suffix},
+                        {"access", 7},
+                        {"unit", "mired"},
+                        {"value_min", 250},
+                        {"value_max", 454}});
+  }
+  if (color) {
+    features.push_back({{"type", "composite"},
+                        {"name", "color_xy"},
+                        {"property", "color" + suffix},
+                        {"access", 7},
+                        {"features", json::array({{{"type", "numeric"},
+                                                   {"name", "x"},
+                                                   {"property", "x"},
+                                                   {"access", 7}},
+                                                  {{"type", "numeric"},
+                                                   {"name", "y"},
+                                                   {"property", "y"},
+                                                   {"access", 7}}})}});
+  }
+  json exposes = json::array();
+  exposes.push_back({{"type", "light"}, {"features", features}});
+  exposes.push_back({{"type", "enum"},
+                     {"name", "effect"},
+                     {"property", "effect"},
+                     {"access", 2},
+                     {"values", {"blink", "breathe", "okay"}}});
+  exposes.push_back({{"type", "enum"},
+                     {"name", "power_on_behavior"},
+                     {"property", "power_on_behavior"},
+                     {"access", 7},
+                     {"values", {"off", "on", "toggle", "previous"}}});
+  return {{"ieee_address", ieee},
+          {"friendly_name", name},
+          {"type", "Router"},
+          {"power_source", "Mains (single phase)"},
+          {"interview_completed", true},
+          {"definition",
+           {{"vendor", "IKEA"}, {"model", name}, {"exposes", exposes}}}};
+}
+
+}  // namespace
+
+TEST(Z2mMapperTest, LightFunctionDependsOnFeatures) {
+  json plain = ikeaLight("0x01", "on/off", false, false);
+  plain["definition"]["exposes"][0]["features"].erase(1);  // no brightness
+  auto devices = parseBridgeDevices(
+      json::array({ikeaLight("0x02", "LED2104R3", false, false),
+                   ikeaLight("0x03", "LED2005R5", true, false),
+                   ikeaLight("0x04", "L2112", true, true),
+                   ikeaLight("0x05", "RGB", false, true), plain}));
+  ASSERT_EQ(devices.size(), 5u);
+  const int32_t functions[] = {
+      SUPLA_CHANNELFNC_DIMMER, SUPLA_CHANNELFNC_DIMMER_CCT,
+      SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB, SUPLA_CHANNELFNC_RGBLIGHTING};
+  for (int i = 0; i < 4; i++) {
+    const auto &channels = devices[i].descriptor.channels;
+    ASSERT_EQ(channels.size(), 1u) << devices[i].friendlyName;
+    EXPECT_EQ(channels[0].kind, ChannelKind::Light);
+    EXPECT_EQ(channels[0].key, "state");
+    EXPECT_EQ(channels[0].caption, "światło");
+    EXPECT_EQ(channels[0].defaultFunction, functions[i]);
+  }
+  // A light without brightness stays a light switch.
+  const auto &channels = devices[4].descriptor.channels;
+  ASSERT_EQ(channels.size(), 1u);
+  EXPECT_EQ(channels[0].kind, ChannelKind::Relay);
+  EXPECT_EQ(channels[0].defaultFunction, SUPLA_CHANNELFNC_LIGHTSWITCH);
+}
+
+TEST(Z2mMapperTest, LightStateAndCommands) {
+  auto devices =
+      parseBridgeDevices(json::array({ikeaLight("0x04", "L2112", true, true)}));
+  ASSERT_EQ(devices.size(), 1u);
+  const Device &d = devices[0];
+
+  // White light: brightness 0..254 -> 0..100 %, 250..454 mired -> 100..0.
+  auto states = extractStates(d, json::parse(R"({"state":"ON",
+      "brightness":127,"color_temp":352,"color_mode":"color_temp",
+      "color":{"x":0.4,"y":0.38}})"));
+  ASSERT_EQ(states.size(), 1u);
+  EXPECT_EQ(states[0].first, "state");
+  ChannelState s = states[0].second;
+  EXPECT_DOUBLE_EQ(s.primary, 1);
+  EXPECT_DOUBLE_EQ(s.brightness, 50);
+  EXPECT_DOUBLE_EQ(s.colorBrightness, 0);
+  EXPECT_DOUBLE_EQ(s.whiteTemperature, 50);
+  EXPECT_FALSE(std::isnan(s.color));
+
+  // Color light: the brightness is the color brightness; x/y -> RGB.
+  states = extractStates(d, json::parse(R"({"state":"ON","brightness":254,
+      "color_mode":"xy","color":{"x":0.64,"y":0.33}})"));
+  ASSERT_EQ(states.size(), 1u);
+  s = states[0].second;
+  EXPECT_DOUBLE_EQ(s.brightness, 0);
+  EXPECT_DOUBLE_EQ(s.colorBrightness, 100);
+  int rgb = static_cast<int>(s.color);
+  EXPECT_EQ(rgb >> 16, 255);         // red
+  EXPECT_LT((rgb >> 8) & 0xFF, 10);  // no green
+  EXPECT_LT(rgb & 0xFF, 10);         // no blue
+
+  // The lowest brightness is still on.
+  states = extractStates(d, json::parse(R"({"state":"OFF","brightness":1})"));
+  EXPECT_DOUBLE_EQ(states[0].second.primary, 0);
+  EXPECT_DOUBLE_EQ(states[0].second.brightness, 1);
+
+  ChannelCommand on;
+  on.type = ChannelCommand::Type::TurnOn;
+  auto messages = buildCommand(d, "state", on);
+  ASSERT_EQ(messages.size(), 1u);
+  EXPECT_EQ(messages[0], json::parse(R"({"state":"ON"})"));
+
+  ChannelCommand white;
+  white.type = ChannelCommand::Type::SetLight;
+  white.brightness = 50;
+  white.whiteTemperature = 0;
+  messages = buildCommand(d, "state", white);
+  ASSERT_EQ(messages.size(), 1u);
+  EXPECT_EQ(messages[0], json::parse(
+                             R"({"state":"ON","brightness":127,
+                                 "color_temp":454})"));
+
+  ChannelCommand color;
+  color.type = ChannelCommand::Type::SetLight;
+  color.brightness = 1;
+  color.color = 0xFF8000;
+  messages = buildCommand(d, "state", color);
+  ASSERT_EQ(messages.size(), 1u);
+  EXPECT_EQ(messages[0], json::parse(R"({"state":"ON","brightness":3,
+      "color":{"r":255,"g":128,"b":0}})"));
+}
+
+TEST(Z2mMapperTest, LightEndpointsAndHueSaturation) {
+  json light = ikeaLight("0x06", "Dual", false, true, "_l1");
+  light["definition"]["exposes"][0]["features"][2]["name"] = "color_hs";
+  auto devices = parseBridgeDevices(json::array({light}));
+  ASSERT_EQ(devices.size(), 1u);
+  const Device &d = devices[0];
+  ASSERT_EQ(d.descriptor.channels.size(), 1u);
+  EXPECT_EQ(d.descriptor.channels[0].key, "state_l1");
+  EXPECT_EQ(d.descriptor.channels[0].caption, "światło L1");
+  auto states = extractStates(d, json::parse(R"({"state_l1":"ON",
+      "brightness_l1":254,"color_mode_l1":"hs",
+      "color_l1":{"hue":240,"saturation":100,"x":0.15,"y":0.06}})"));
+  ASSERT_EQ(states.size(), 1u);
+  EXPECT_DOUBLE_EQ(states[0].second.colorBrightness, 100);
+  EXPECT_DOUBLE_EQ(states[0].second.color, 0x0000FF);
+  ChannelCommand off;
+  off.type = ChannelCommand::Type::TurnOff;
+  auto messages = buildCommand(d, "state_l1", off);
+  ASSERT_EQ(messages.size(), 1u);
+  EXPECT_EQ(messages[0], json::parse(R"({"state_l1":"OFF"})"));
+}
+
+TEST(Z2mMapperTest, OnOffRemoteHasTwoButtons) {
+  // IKEA RODRET E2201.
+  json remote = json::parse(R"({
+    "ieee_address": "0x0000000000002201", "friendly_name": "Pilot",
+    "type": "EndDevice", "power_source": "Battery",
+    "interview_completed": true,
+    "definition": {"vendor": "IKEA", "model": "E2201", "exposes": [
+      {"type": "enum", "name": "identify", "property": "identify",
+       "access": 2, "values": ["identify"]},
+      {"type": "numeric", "name": "battery", "property": "battery",
+       "access": 5, "unit": "%"},
+      {"type": "numeric", "name": "voltage", "property": "voltage",
+       "access": 5, "unit": "mV"},
+      {"type": "enum", "name": "action", "property": "action", "access": 1,
+       "values": ["on", "off", "brightness_move_up", "brightness_move_down",
+                  "brightness_stop"]}]}})");
+  auto devices = parseBridgeDevices(json::array({remote}));
+  ASSERT_EQ(devices.size(), 1u);
+  const Device &d = devices[0];
+  ASSERT_EQ(d.descriptor.channels.size(), 2u);
+  EXPECT_EQ(d.descriptor.channels[0].key, "action_on");
+  EXPECT_EQ(d.descriptor.channels[0].caption, "przycisk włącz");
+  EXPECT_EQ(d.descriptor.channels[1].key, "action_off");
+  EXPECT_EQ(d.descriptor.channels[1].caption, "przycisk wyłącz");
+  for (const auto &c : d.descriptor.channels) {
+    EXPECT_EQ(c.kind, ChannelKind::ActionTrigger);
+    EXPECT_EQ(c.actionCaps,
+              SUPLA_ACTION_CAP_SHORT_PRESS_x1 | SUPLA_ACTION_CAP_HOLD);
+  }
+  using Actions = std::vector<std::pair<std::string, uint32_t>>;
+  EXPECT_EQ(extractActions(d, json::parse(R"({"action":"on"})")),
+            (Actions{{"action_on", SUPLA_ACTION_CAP_SHORT_PRESS_x1}}));
+  EXPECT_EQ(
+      extractActions(d, json::parse(R"({"action":"brightness_move_down"})")),
+      (Actions{{"action_off", SUPLA_ACTION_CAP_HOLD}}));
+  EXPECT_TRUE(extractActions(d, json::parse(R"({"action":"brightness_stop"})"))
+                  .empty());
 }

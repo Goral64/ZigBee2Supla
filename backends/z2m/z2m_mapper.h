@@ -48,6 +48,15 @@ struct Binding {
   std::string presetProgram;    // "schedule" or "program": own schedule
   std::string runningProperty;  // "running_state"
   std::string valveProperty;    // "position" of radiator heads
+  // Light only (property = "state", "state_l1"...); empty when the light
+  // has no such feature.
+  std::string brightnessProperty;  // "brightness"
+  double brightnessMax = 254;
+  std::string colorTempProperty;  // "color_temp" [mired]
+  double colorTempMin = 0;        // coldest
+  double colorTempMax = 0;        // warmest
+  std::string colorProperty;      // "color" (x/y or hue/saturation)
+  std::string colorModeProperty;  // "color_mode": "color_temp", "xy", "hs"
 };
 
 struct Device {

@@ -29,6 +29,27 @@ std::string normalizedIeee(const std::string &entry) {
   return "0x" + hex;
 }
 
+// Lights were bridged as relays before dimming was supported; a light
+// registered that way stays a relay (on/off only), since Supla does not
+// allow changing the type of a channel.
+DeviceDescriptor withRegisteredLights(const DeviceDescriptor &device,
+                                      const DeviceIdentity *identity) {
+  DeviceDescriptor result = device;
+  if (identity == nullptr) return result;
+  for (auto &channel : result.channels) {
+    if (channel.kind != ChannelKind::Light) continue;
+    auto relay = std::find_if(
+        identity->channels.begin(), identity->channels.end(),
+        [&channel](const ChannelSpec &c) {
+          return c.key == channel.key && c.kind == ChannelKind::Relay;
+        });
+    if (relay == identity->channels.end()) continue;
+    channel.kind = ChannelKind::Relay;
+    channel.defaultFunction = relay->defaultFunction;
+  }
+  return result;
+}
+
 }  // namespace
 
 Gateway::Gateway(const GatewayConfig &config, IdentityStore *store,
@@ -51,10 +72,12 @@ void Gateway::onDeviceList(const std::vector<DeviceDescriptor> &devices) {
   bool storeChanged = false;
   std::set<std::string> seen;
 
-  for (const auto &device : devices) {
-    if (device.channels.empty() || !isBridged(device)) {
+  for (const auto &backendDevice : devices) {
+    if (backendDevice.channels.empty() || !isBridged(backendDevice)) {
       continue;
     }
+    const DeviceDescriptor device =
+        withRegisteredLights(backendDevice, store_->find(backendDevice.id));
     bool changed = false;
     const DeviceIdentity *identity = store_->reconcile(device, &changed);
     if (identity == nullptr) {
