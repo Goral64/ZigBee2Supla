@@ -7,6 +7,9 @@ potrzebne. Mostek łączy się wtedy z API WebSocket Home Assistanta: czyta
 urządzenia, ich stany i naciśnięcia przycisków, a polecenia z Supli
 wykonuje przez usługi HA (np. `switch.turn_on`).
 
+To źródło jest na razie eksperymentalne: sprawdzałem je na kilku
+urządzeniach, bez prawdziwego serwera Supli.
+
 ## Włączenie
 
 W dodatku Home Assistant wystarczy ustawić opcję `source` na `zha`. Adres

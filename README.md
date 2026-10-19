@@ -8,10 +8,9 @@ lokalizacją, statusem online, kanałami i historią. W Supla Cloud
 i w aplikacji widzisz więc „Termometr salon” i „Gniazdko pralka”, a nie
 jedną bramkę ze stoma kanałami.
 
-**Stan: wersja beta.** Mostek działa na co dzień w instalacji z ponad
-100 urządzeniami ZigBee (Home Assistant OS z zigbee2mqtt, Supla Cloud).
-Sprawdzone urządzenia i ograniczenia opisuje rozdział
-[Co jest sprawdzone](#co-jest-sprawdzone).
+Mostek działa na co dzień w instalacji z ponad 100 urządzeniami ZigBee
+(Home Assistant OS z zigbee2mqtt, Supla Cloud). Sprawdzone urządzenia
+i ograniczenia opisuje rozdział [Co jest sprawdzone](#co-jest-sprawdzone).
 
 ## Co potrafi
 
@@ -177,9 +176,9 @@ kontener Docker na osobnej maszynie, usługa w supla-docker oraz zestaw
 z własnym koordynatorem instalowany przez `z2s.sh`, z ConBee II (USB)
 i SLZB-06U (sieciowym), zarówno z Supla Cloud, jak i z supla-docker.
 
-ZHA jako źródło urządzeń działa na osobnym Home Assistant z kilkoma
-urządzeniami (ZBMINI, gniazdko TS011F, SNZB-04, przycisk TS0041, głowica
-TS0601), na razie tylko z udawanym serwerem Supli.
+ZHA jako źródło urządzeń jest na razie eksperymentalne. Działa na osobnym
+Home Assistant z kilkoma urządzeniami (ZBMINI, gniazdko TS011F, SNZB-04,
+przycisk TS0041, głowica TS0601), tylko z udawanym serwerem Supli.
 
 **Jeszcze nie ma:** ściemniania świateł przy ZHA, rolet, zamków,
 wentylatorów, harmonogramu tygodniowego Supli dla termostatów (działa
