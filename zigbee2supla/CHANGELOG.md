@@ -1,5 +1,13 @@
 # Zmiany
 
+## 0.4.0
+
+- Pierwsza wersja bez bety.
+- Czujniki Tuya, które podają baterię tylko jako niska / średnia / wysoka
+  (np. ZTH05), pokazują w Supli 10 / 50 / 100 %.
+- Urządzenie z informacją o baterii jest pokazywane jako bateryjne, nawet
+  gdy zgłasza zasilanie z sieci.
+
 ## 0.4.0-beta.4
 
 - Światła z regulacją jasności (Zigbee2MQTT) są w Supli ściemniaczami,
