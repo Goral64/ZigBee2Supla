@@ -641,7 +641,8 @@ std::optional<Device> parseDevice(const json &dev) {
   device.descriptor.manufacturer = definition.value("vendor", "");
   device.descriptor.model = definition.value("model", "");
   const std::string powerSource = dev.value("power_source", "");
-  if (powerSource == "Battery") {
+  const bool reportsBattery = powerSource == "Battery";
+  if (reportsBattery) {
     device.descriptor.batteryPowered = 1;
   } else if (powerSource.rfind("Mains", 0) == 0 || powerSource == "DC Source") {
     device.descriptor.batteryPowered = 0;
@@ -655,6 +656,16 @@ std::optional<Device> parseDevice(const json &dev) {
   std::vector<Feature> features;
   if (definition.contains("exposes")) {
     collectFeatures(definition["exposes"], "", &features);
+  }
+  // Some Tuya devices report "Mains" although they run on a battery; any
+  // battery expose wins for the channel state. Channel layout still follows
+  // power_source, so existing devices keep their channels.
+  for (const auto &f : features) {
+    const std::string name = f.def->value("name", "");
+    if (f.parentType.empty() && (name == "battery" || name == "battery_low" ||
+                                 name == "battery_state")) {
+      device.descriptor.batteryPowered = 1;
+    }
   }
 
   // A thermostat is bridged as its thermometer and thermostat only: its
@@ -762,8 +773,7 @@ std::optional<Device> parseDevice(const json &dev) {
     device.bindings.push_back(b);
   }
 
-  addEnergyBindings(features, device.descriptor.batteryPowered == 1,
-                    &device.bindings);
+  addEnergyBindings(features, reportsBattery, &device.bindings);
   addMeasurementBindings(features, &device.bindings);
   addValveAlarmBindings(features, &device.bindings);
   addActionBindings(features, &device.bindings);
@@ -975,6 +985,18 @@ std::optional<DeviceHealth> extractHealth(const json &payload) {
   if (payload.contains("battery_low") && payload["battery_low"].is_boolean()) {
     health.batteryLow = payload["battery_low"].get<bool>() ? 1 : 0;
     found = true;
+  }
+  // Tuya "battery_state" (low / medium / high) as a percentage, with "low"
+  // well below the level the app shows as a weak battery.
+  if (health.batteryLevel < 0 && payload.contains("battery_state") &&
+      payload["battery_state"].is_string()) {
+    static const std::map<std::string, int> kLevels = {
+        {"low", 10}, {"medium", 50}, {"high", 100}};
+    auto it = kLevels.find(payload["battery_state"].get<std::string>());
+    if (it != kLevels.end()) {
+      health.batteryLevel = it->second;
+      found = true;
+    }
   }
   // zigbee2mqtt link quality (LQI) is 0..255.
   double lqi = numberOrNan(payload, "linkquality");

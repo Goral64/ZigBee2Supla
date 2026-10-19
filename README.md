@@ -164,12 +164,13 @@ w sieci ponad 100 urządzeń:
 |---|---|
 | przekaźniki, gniazdka | SONOFF ZBMINI, Tuya TS0001/TS0002, gniazdka Nous A1Z, Girier JR-ZPM01, Tuya TS011F/TS0121 (z licznikiem energii; timer na Nous A1Z) |
 | czujniki | SONOFF SNZB-04 (otwarcie), SNZB-03 (ruch), SNZB-05P (zalanie), Xiaomi GZCGQ01LM, Aqara GZCGQ11LM i Tuya TS0222 (światło) |
-| przyciski | Tuya TS0041 |
+| przyciski, piloty | Tuya TS0041, IKEA RODRET E2201 |
+| światła ze ściemnianiem | IKEA LED2002G5, taśma IKEA ORMANÄS L2112 |
 | termostaty | głowice Tuya TS0601, termostat ścienny Moes BHT-002 |
 
 Czujniki temperatury, wilgotności i ciśnienia, piloty wieloprzyciskowe,
-czujniki dymu, gazu i CO oraz światła ze ściemnianiem i kolorem są
-sprawdzone tylko testami, bez prawdziwych urządzeń.
+czujniki dymu, gazu i CO oraz światła z kolorem są sprawdzone tylko
+testami, bez prawdziwych urządzeń.
 
 Sprawdzone sposoby uruchomienia: dodatek Home Assistant (z repozytorium),
 kontener Docker na osobnej maszynie, usługa w supla-docker oraz zestaw

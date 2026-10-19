@@ -214,8 +214,11 @@ Ograniczenia:
 Każdy kanał pokazuje w Supli stan całego urządzenia:
 
 * poziom baterii (`battery`), a gdy urządzenie podaje tylko `battery_low`
-  – stan baterii (słaba / w porządku),
-* zasilanie z baterii lub sieci (`power_source`),
+  – stan baterii (słaba / w porządku); część czujników Tuya podaje tylko
+  `battery_state`, wtedy `low` / `medium` / `high` daje 10 / 50 / 100 %,
+* zasilanie z baterii lub sieci (`power_source`); urządzenie, które podaje
+  cokolwiek o baterii, jest pokazywane jako bateryjne, nawet gdy zgłasza
+  zasilanie sieciowe (tak robią niektóre Tuya),
 * siłę sygnału ZigBee (`linkquality` 0–255, przeliczone liniowo na
   0–100 %).
 
