@@ -393,6 +393,26 @@ TEST(Z2mMapperTest, DeviceHealth) {
   EXPECT_FALSE(extractHealth(json::parse(R"({"state":"ON"})")).has_value());
 }
 
+TEST(Z2mMapperTest, TuyaBatteryState) {
+  auto health = extractHealth(json::parse(R"({"battery_state":"low"})"));
+  ASSERT_TRUE(health.has_value());
+  EXPECT_EQ(health->batteryLevel, 10);
+  health = extractHealth(json::parse(R"({"battery_state":"medium"})"));
+  ASSERT_TRUE(health.has_value());
+  EXPECT_EQ(health->batteryLevel, 50);
+  health = extractHealth(json::parse(R"({"battery_state":"high"})"));
+  ASSERT_TRUE(health.has_value());
+  EXPECT_EQ(health->batteryLevel, 100);
+
+  // A real percentage wins; unknown values are ignored.
+  health =
+      extractHealth(json::parse(R"({"battery":80,"battery_state":"low"})"));
+  ASSERT_TRUE(health.has_value());
+  EXPECT_EQ(health->batteryLevel, 80);
+  EXPECT_FALSE(
+      extractHealth(json::parse(R"({"battery_state":"full"})")).has_value());
+}
+
 TEST(Z2mMapperTest, PowerSource) {
   json dev = deviceWithExposes(json::array({relay("state")}));
   EXPECT_EQ(parseBridgeDevices(json::array({dev}))[0].descriptor.batteryPowered,
@@ -403,6 +423,31 @@ TEST(Z2mMapperTest, PowerSource) {
   dev["power_source"] = "Battery";
   EXPECT_EQ(parseBridgeDevices(json::array({dev}))[0].descriptor.batteryPowered,
             1);
+}
+
+TEST(Z2mMapperTest, BatteryExposeOverridesMainsPowerSource) {
+  // Tuya ZTH05 reports "Mains" but runs on a battery.
+  json state = json{{"type", "enum"},
+                    {"name", "battery_state"},
+                    {"property", "battery_state"},
+                    {"access", 1},
+                    {"values", {"low", "medium", "high"}}};
+  json dev = deviceWithExposes(
+      json::array({number("temperature", "°C", 1, 1), state}));
+  dev["power_source"] = "Mains (single phase)";
+  auto devices = parseBridgeDevices(json::array({dev}));
+  ASSERT_EQ(devices.size(), 1u);
+  EXPECT_EQ(devices[0].descriptor.batteryPowered, 1);
+
+  // The channel layout still follows power_source: a voltage measurement
+  // stays on a "Mains" device with a battery expose.
+  dev = deviceWithExposes(json::array(
+      {number("battery", "%", 1, 100), number("voltage", "V", 1, 0)}));
+  dev["power_source"] = "Mains (single phase)";
+  devices = parseBridgeDevices(json::array({dev}));
+  ASSERT_EQ(devices.size(), 1u);
+  EXPECT_EQ(devices[0].descriptor.batteryPowered, 1);
+  EXPECT_EQ(devices[0].descriptor.channels.size(), 1u);
 }
 
 TEST(Z2mMapperTest, LightSensorIsGeneralPurposeMeasurement) {
