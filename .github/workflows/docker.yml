@@ -22,18 +22,18 @@ jobs:
   standalone:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Image name (ghcr.io requires lowercase)
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/zigbee2supla" >> "$GITHUB_ENV"
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
           tags: |
@@ -41,7 +41,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           target: runtime
@@ -65,19 +65,19 @@ jobs:
           - arch: armv7
             platform: linux/arm/v7
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Image name and version
         run: |
           echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/zigbee2supla-addon-${{ matrix.arch }}" >> "$GITHUB_ENV"
           echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           target: addon
@@ -95,7 +95,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: tools/package_docker.sh zigbee2supla-docker.tar.gz
       # Not a pre-release even for betas: releases/latest/download/... must
       # point to the newest package.
