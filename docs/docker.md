@@ -355,8 +355,36 @@ w kółko `Connection refused`. Wtedy wystarczy `docker restart supla-server`.
 ### Pierwsze uruchomienie zigbee2mqtt
 
 zigbee2mqtt nie pokazuje strony pierwszego uruchomienia: koordynator
-i MQTT są już ustawione, a sieć ZigBee tworzy się sama, z losowym kluczem
-i domyślnym kanałem 11.
+i MQTT są już ustawione, a sieć ZigBee tworzy się sama, z losowym kluczem.
+Kanał ZigBee wybiera się w `./z2s.sh`. Bez kreatora zigbee2mqtt bierze
+kanał 11; inny ustawisz, tworząc przed pierwszym uruchomieniem plik
+`./zigbee2mqtt/configuration.yaml`:
+
+```yaml
+advanced:
+  channel: 20
+  network_key: GENERATE
+  pan_id: GENERATE
+  ext_pan_id: GENERATE
+```
+
+ZigBee dzieli pasmo 2,4 GHz z Wi-Fi, Threadem (Matter) i Bluetoothem.
+Najbardziej przeszkadza mu Wi-Fi, więc kanał ZigBee warto ustawić jak
+najdalej od kanału routera (kanał Wi-Fi ustaw w routerze na stałe, bez
+„auto”):
+
+* Wi-Fi na kanałach 1-5: ZigBee 25,
+* Wi-Fi 6-10: ZigBee 11,
+* Wi-Fi 11-13: ZigBee 15.
+
+Tak samo dobiera kanał strona pierwszego uruchomienia zigbee2mqtt.
+Kanał 20 wypada na środku pasma, przy Wi-Fi 7-10 i kuchenkach
+mikrofalowych. Z kanałami spoza 11, 15, 20 i 25 bywają problemy
+w starszych urządzeniach (zigbee2mqtt też je odradza), a moc na 26 jest
+w części sprzętu ograniczona.
+Sieć Thread, jeśli ją masz, powinna mieć inny kanał niż ZigBee. Bluetooth
+skacze po całym paśmie i zwykle nie przeszkadza. Zmiana kanału po
+sparowaniu urządzeń wymaga ponownego parowania części z nich.
 
 1. Otwórz `http://<adres maszyny>:8080`.
 2. W Supla Cloud włącz rejestrację nowych urządzeń.
@@ -364,10 +392,11 @@ i domyślnym kanałem 11.
    pojawi się w Supli jako osobne urządzenie.
 
 Jeśli zigbee2mqtt był już uruchomiony wcześniej, zostaje jego
-konfiguracja z `./zigbee2mqtt/configuration.yaml`. Typ koordynatora USB
-z `.env` ma przed nią pierwszeństwo; bez pliku
+konfiguracja z `./zigbee2mqtt/configuration.yaml`, także kanał. Typ
+koordynatora USB z `.env` ma przed nią pierwszeństwo; bez pliku
 `docker-compose.zigbee2mqtt-usb-adapter.yml` zostaje typ z tej
-konfiguracji. `./z2s.sh` w takim przypadku pozwala go zostawić.
+konfiguracji. `./z2s.sh` w takim przypadku pozwala go zostawić i nie pyta
+o kanał.
 
 Mosquitto jest dostępny tylko wewnątrz tego zestawu, bez hasła i bez
 wystawionego portu. Dane zigbee2mqtt (klucz sieci i sparowane urządzenia)
