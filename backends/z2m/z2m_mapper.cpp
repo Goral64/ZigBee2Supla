@@ -402,11 +402,14 @@ uint32_t actionCap(const std::string &name) {
       {"single", SUPLA_ACTION_CAP_SHORT_PRESS_x1},
       {"click", SUPLA_ACTION_CAP_SHORT_PRESS_x1},
       {"press", SUPLA_ACTION_CAP_SHORT_PRESS_x1},
+      {"short_release", SUPLA_ACTION_CAP_SHORT_PRESS_x1},
       {"double", SUPLA_ACTION_CAP_SHORT_PRESS_x2},
+      {"double_press", SUPLA_ACTION_CAP_SHORT_PRESS_x2},
       {"triple", SUPLA_ACTION_CAP_SHORT_PRESS_x3},
       {"quadruple", SUPLA_ACTION_CAP_SHORT_PRESS_x4},
       {"hold", SUPLA_ACTION_CAP_HOLD},
       {"long", SUPLA_ACTION_CAP_HOLD},
+      {"long_press", SUPLA_ACTION_CAP_HOLD},
       {"on", SUPLA_ACTION_CAP_TURN_ON},
       {"off", SUPLA_ACTION_CAP_TURN_OFF},
       {"rotate_left", SUPLA_ACTION_CAP_ROTATE_LEFT},
@@ -423,11 +426,13 @@ bool isNumber(const std::string &s) {
 }
 
 // Splits an action value into the button number ("" for single-button
-// devices) and the action name: "single", "1_single", "button_2_hold".
+// devices) and the action name: "single", "1_single", "button_2_hold",
+// "dots_1_short_release".
 void splitAction(const std::string &value, std::string *button,
                  std::string *name) {
   std::string rest = value;
   if (rest.rfind("button_", 0) == 0) rest = rest.substr(7);
+  if (rest.rfind("dots_", 0) == 0) rest = rest.substr(5);
   size_t sep = rest.find('_');
   if (sep != std::string::npos && isNumber(rest.substr(0, sep))) {
     *button = rest.substr(0, sep);
@@ -476,9 +481,56 @@ bool addOnOffButtonBindings(const json &values,
   return true;
 }
 
-// Buttons and remotes: one action trigger channel per button ("action" or
-// "action_<n>"), with the actions it reports. Values without a Supla
-// counterpart (e.g. "brightness_move_up", "release") are ignored.
+// Buttons with a name instead of a number (IKEA SYMFONISK E2123, STYRBAR
+// E2001): "<name>" or "<name>_click" is a short press, "<name>_hold" a hold.
+// Only these names, so that other values (e.g. "recall_1") do not become
+// channels.
+struct NamedButton {
+  const char *name;
+  const char *caption;
+};
+
+const NamedButton kNamedButtons[] = {
+    {"toggle", "przycisk odtwarzania"},
+    {"volume_up", "przycisk głośniej"},
+    {"volume_down", "przycisk ciszej"},
+    {"track_previous", "przycisk poprzedni utwór"},
+    {"track_next", "przycisk następny utwór"},
+    {"arrow_left", "strzałka w lewo"},
+    {"arrow_right", "strzałka w prawo"},
+};
+
+void addNamedButtonBindings(const json &values,
+                            std::vector<Binding> *bindings) {
+  for (const auto &button : kNamedButtons) {
+    const std::string name = button.name;
+    Binding b;
+    for (const auto &v : values) {
+      if (!v.is_string()) continue;
+      const std::string value = v.get<std::string>();
+      uint32_t cap = 0;
+      if (value == name || value == name + "_click") {
+        cap = SUPLA_ACTION_CAP_SHORT_PRESS_x1;
+      } else if (value == name + "_hold") {
+        cap = SUPLA_ACTION_CAP_HOLD;
+      }
+      if (cap == 0) continue;
+      b.spec.actionCaps |= cap;
+      b.actions[value] = cap;
+    }
+    if (b.actions.empty()) continue;
+    b.spec.kind = ChannelKind::ActionTrigger;
+    b.spec.key = "action_" + name;
+    b.spec.caption = button.caption;
+    b.property = "action";
+    bindings->push_back(b);
+  }
+}
+
+// Buttons and remotes: one action trigger channel per button ("action",
+// "action_<n>" or "action_<name>"), with the actions it reports. Values
+// without a Supla counterpart (e.g. "brightness_move_up", "release",
+// "initial_press") are ignored.
 void addActionBindings(const std::vector<Feature> &features,
                        std::vector<Binding> *bindings) {
   for (const auto &f : features) {
@@ -488,7 +540,10 @@ void addActionBindings(const std::vector<Feature> &features,
         !def["values"].is_array()) {
       continue;
     }
-    if (addOnOffButtonBindings(def["values"], bindings)) return;
+    if (addOnOffButtonBindings(def["values"], bindings)) {
+      addNamedButtonBindings(def["values"], bindings);
+      return;
+    }
     std::map<std::string, Binding> buttons;  // ordered by button number
     for (const auto &v : def["values"]) {
       if (!v.is_string()) continue;
@@ -513,6 +568,7 @@ void addActionBindings(const std::vector<Feature> &features,
       return a.first < b.first;
     });
     for (auto &[button, b] : sorted) bindings->push_back(b);
+    addNamedButtonBindings(def["values"], bindings);
     return;
   }
 }
@@ -541,7 +597,13 @@ const json *climateFeature(const json &climate, const std::string &property) {
 // only, fan coils...).
 std::optional<std::pair<Binding, Binding>> thermostatBindings(
     const json &climate, const std::vector<Feature> &features) {
-  const json *setpoint = climateFeature(climate, "current_heating_setpoint");
+  std::string setpointProperty = "current_heating_setpoint";
+  const json *setpoint = climateFeature(climate, setpointProperty);
+  if (setpoint == nullptr) {
+    // Aqara SRTS-A01.
+    setpointProperty = "occupied_heating_setpoint";
+    setpoint = climateFeature(climate, setpointProperty);
+  }
   const json *temperature = climateFeature(climate, "local_temperature");
   const json *mode = climateFeature(climate, "system_mode");
   if (setpoint == nullptr || temperature == nullptr || mode == nullptr ||
@@ -558,13 +620,13 @@ std::optional<std::pair<Binding, Binding>> thermostatBindings(
 
   Binding b;
   b.spec.kind = ChannelKind::Thermostat;
-  b.spec.key = "current_heating_setpoint";
+  b.spec.key = setpointProperty;
   b.spec.caption = "termostat";
   b.spec.thermometerKey = thermometer.spec.key;
   b.spec.setpointMin = setpoint->value("value_min", NAN);
   b.spec.setpointMax = setpoint->value("value_max", NAN);
   b.spec.setpointStep = setpoint->value("value_step", NAN);
-  b.property = "current_heating_setpoint";
+  b.property = setpointProperty;
   b.modeProperty = "system_mode";
   b.modeHeat = "heat";
   if (hasEnumValue(*mode, "off")) b.modeOff = "off";
@@ -577,7 +639,8 @@ std::optional<std::pair<Binding, Binding>> thermostatBindings(
         break;
       }
     }
-    for (const char *program : {"schedule", "program"}) {
+    // "auto" is the schedule of Aqara SRTS-A01.
+    for (const char *program : {"schedule", "program", "auto"}) {
       if (!b.presetProperty.empty() && hasEnumValue(*preset, program)) {
         b.presetProgram = program;
         break;

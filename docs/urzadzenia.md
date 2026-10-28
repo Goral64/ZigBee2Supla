@@ -27,7 +27,7 @@ udostępnia. Przy ZHA zasady są te same, różnice opisuje [zha.md](zha.md).
 | `flow` (m³/h, np. zawór SONOFF SWV) | pomiar ogólny „przepływ” |
 | `current_device_status` (zawór SONOFF SWV) | czujnik zalania „wyciek” i czujnik binarny „brak wody” |
 | `action` (przyciski, piloty) | wyzwalacz akcji, osobny kanał na każdy przycisk |
-| `climate` z `current_heating_setpoint` (głowice, termostaty) | termometr + termostat |
+| `climate` z `current_heating_setpoint` albo `occupied_heating_setpoint` (głowice, termostaty) | termometr + termostat |
 
 Oprócz tego każdy kanał pokazuje stan urządzenia: baterię, zasilanie
 i siłę sygnału ZigBee (rozdział [Bateria i sygnał](#bateria-i-sygnał)).
@@ -86,6 +86,10 @@ pozostały czas.
 Przekaźnik bez timera nie oferuje włączania na czas: mostek nie odlicza
 zamiast urządzenia i takie polecenie odrzuca. Czas dłuższy, niż pozwala
 urządzenie, też jest odrzucany.
+
+Zawory, które zigbee2mqtt pokazuje jako zwykły włącznik (np. Aqara VC-X01D
+Valve controller T1), są w Supli przekaźnikiem z funkcją „włącznik
+zasilania”. Włączony = zawór otwarty.
 
 ## Światła
 
@@ -152,32 +156,39 @@ Cloud. Wartości `action` z zigbee2mqtt:
 
 | zigbee2mqtt | Supla |
 |---|---|
-| `single`, `click`, `press` | krótkie naciśnięcie ×1 |
-| `double` / `triple` / `quadruple` | krótkie naciśnięcie ×2 / ×3 / ×4 |
-| `hold`, `long` | przytrzymanie |
+| `single`, `click`, `press`, `short_release` | krótkie naciśnięcie ×1 |
+| `double`, `double_press` / `triple` / `quadruple` | krótkie naciśnięcie ×2 / ×3 / ×4 |
+| `hold`, `long`, `long_press` | przytrzymanie |
 | `on`, `off` | włącz, wyłącz |
 | `rotate_left`, `rotate_right` | obrót w lewo, w prawo |
 
-Numer przycisku w wartości (`1_single`, `button_2_hold`) daje osobny kanał
-na przycisk („przycisk 1”, „przycisk 2”…). Inne wartości (np.
-`brightness_move_up`, `release`, `single_left`) są pomijane. Akcja
-zachowana przez broker (*retain*) albo z czasu, gdy urządzenie nie było
-połączone z Suplą, nie jest wysyłana: spóźniona akcja uruchomiłaby
-automatyzację w nieoczekiwanej chwili.
+Numer przycisku w wartości (`1_single`, `button_2_hold`,
+`dots_1_short_release`) daje osobny kanał na przycisk („przycisk 1”,
+„przycisk 2”…). Osobny kanał dostają też przyciski z nazwą: `toggle`,
+`volume_up`, `volume_down`, `track_previous`, `track_next` (np. IKEA
+SYMFONISK E2123) oraz strzałki `arrow_left`, `arrow_right` (IKEA STYRBAR).
+Sama nazwa albo `_click` to krótkie naciśnięcie, `_hold` przytrzymanie.
+Inne wartości (np. `brightness_move_up`, `release`, `initial_press`,
+`single_left`) są pomijane. Akcja zachowana przez broker (*retain*) albo
+z czasu, gdy urządzenie nie było połączone z Suplą, nie jest wysyłana:
+spóźniona akcja uruchomiłaby automatyzację w nieoczekiwanej chwili.
 
 Piloty z dwoma przyciskami do ściemniania, które wysyłają `on`, `off`,
 `brightness_move_up` i `brightness_move_down` (np. IKEA RODRET E2201,
 TRADFRI E1743), dostają dwa kanały: „przycisk włącz” i „przycisk
 wyłącz”. Każdy ma krótkie naciśnięcie (`on` / `off`) i przytrzymanie
 (`brightness_move_up` / `brightness_move_down`); puszczenie
-(`brightness_stop`) jest pomijane. Taki pilot dodany do Supli przez
+(`brightness_stop`) jest pomijane. Strzałki STYRBAR dostają kanały
+„strzałka w lewo” i „strzałka w prawo”. Taki pilot dodany do Supli przez
 starszą wersję mostka miał jeden kanał „przycisk”; zostaje on offline,
-a dwa nowe są dopisywane.
+a nowe są dopisywane. STYRBAR dodany wcześniej dostaje strzałki jako
+dopisane kanały.
 
 ## Termostaty i głowice
 
-Urządzenie `climate` z ustawianą temperaturą grzania, temperaturą
-pomieszczenia i trybem `heat` dostaje dwa kanały: termometr
+Urządzenie `climate` z ustawianą temperaturą grzania
+(`current_heating_setpoint`, w Aqara SRTS-A01 `occupied_heating_setpoint`),
+temperaturą pomieszczenia i trybem `heat` dostaje dwa kanały: termometr
 (`local_temperature`, główny termometr termostatu) i termostat. Termostat
 reguluje sam; Supla nim steruje:
 
@@ -187,8 +198,8 @@ reguluje sam; Supla nim steruje:
   w tryb ręczny (`preset` `manual` albo `hold`), bo inaczej program by ją
   nadpisał,
 * **„tryb programu”** w Supli przełącza urządzenie na jego **własny**
-  program (`preset` `schedule` albo `program`); Supla pokazuje, że
-  urządzenie pracuje według programu,
+  program (`preset` `schedule`, `program`, a w Aqara `auto`); Supla
+  pokazuje, że urządzenie pracuje według programu,
 * Supla pokazuje, czy urządzenie grzeje, a przy głowicach otwarcie
   zaworu.
 

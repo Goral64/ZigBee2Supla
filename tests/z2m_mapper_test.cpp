@@ -713,6 +713,38 @@ TEST(Z2mMapperTest, WallThermostatHoldPreset) {
   EXPECT_EQ(cmd[1], json::parse(R"({"current_heating_setpoint":19})"));
 }
 
+TEST(Z2mMapperTest, OccupiedHeatingSetpoint) {
+  // Aqara SRTS-A01: "auto" is its schedule.
+  json head = radiatorHead();
+  auto &climate = head["definition"]["exposes"][3]["features"];
+  climate[0]["name"] = "occupied_heating_setpoint";
+  climate[0]["property"] = "occupied_heating_setpoint";
+  climate[2]["values"] = {"off", "heat"};
+  climate[3]["values"] = {"manual", "away", "auto"};
+  EXPECT_EQ(unsupportedDeviceKind(head), nullptr);
+  auto devices = parseBridgeDevices(json::array({head}));
+  ASSERT_EQ(devices.size(), 1u);
+  const Device &d = devices[0];
+  ASSERT_EQ(d.descriptor.channels.size(), 2u);
+  EXPECT_EQ(d.descriptor.channels[1].kind, ChannelKind::Thermostat);
+  EXPECT_EQ(d.descriptor.channels[1].key, "occupied_heating_setpoint");
+
+  auto states =
+      extractStates(d, json::parse(R"({"occupied_heating_setpoint":21})"));
+  ASSERT_EQ(states.size(), 1u);
+  EXPECT_DOUBLE_EQ(states[0].second.primary, 21);
+  auto cmd = buildCommand(d, "occupied_heating_setpoint",
+                          thermostatCommand(0, 19, true));
+  ASSERT_EQ(cmd.size(), 2u);
+  EXPECT_EQ(cmd[0], json::parse(R"({"preset":"manual"})"));
+  EXPECT_EQ(cmd[1], json::parse(R"({"occupied_heating_setpoint":19})"));
+  ChannelCommand program = thermostatCommand(0, NAN, false);
+  program.program = true;
+  cmd = buildCommand(d, "occupied_heating_setpoint", program);
+  ASSERT_EQ(cmd.size(), 1u);
+  EXPECT_EQ(cmd[0], json::parse(R"({"preset":"auto"})"));
+}
+
 TEST(Z2mMapperTest, ClimateWithoutHeatingSetpointIsSkipped) {
   json cooler = radiatorHead();
   cooler["definition"]["exposes"][3]["features"][0]["access"] = 1;
@@ -967,4 +999,92 @@ TEST(Z2mMapperTest, OnOffRemoteHasTwoButtons) {
       (Actions{{"action_off", SUPLA_ACTION_CAP_HOLD}}));
   EXPECT_TRUE(extractActions(d, json::parse(R"({"action":"brightness_stop"})"))
                   .empty());
+}
+
+TEST(Z2mMapperTest, ShortcutButtonWithPressAndRelease) {
+  // IKEA SOMRIG E2213.
+  json remote = deviceWithExposes(json::array({actionExpose(
+      {"1_initial_press", "1_long_press", "1_short_release", "1_long_release",
+       "1_double_press", "2_initial_press", "2_long_press", "2_short_release",
+       "2_long_release", "2_double_press"})}));
+  auto devices = parseBridgeDevices(json::array({remote}));
+  ASSERT_EQ(devices.size(), 1u);
+  const Device &d = devices[0];
+  ASSERT_EQ(d.descriptor.channels.size(), 2u);
+  EXPECT_EQ(d.descriptor.channels[0].key, "action_1");
+  EXPECT_EQ(d.descriptor.channels[1].key, "action_2");
+  EXPECT_EQ(d.descriptor.channels[1].caption, "przycisk 2");
+  EXPECT_EQ(d.descriptor.channels[1].actionCaps,
+            uint32_t{SUPLA_ACTION_CAP_SHORT_PRESS_x1 |
+                     SUPLA_ACTION_CAP_SHORT_PRESS_x2 | SUPLA_ACTION_CAP_HOLD});
+  using Actions = std::vector<std::pair<std::string, uint32_t>>;
+  EXPECT_EQ(extractActions(d, json::parse(R"({"action":"2_short_release"})")),
+            (Actions{{"action_2", SUPLA_ACTION_CAP_SHORT_PRESS_x1}}));
+  EXPECT_EQ(extractActions(d, json::parse(R"({"action":"1_long_press"})")),
+            (Actions{{"action_1", SUPLA_ACTION_CAP_HOLD}}));
+  EXPECT_TRUE(extractActions(d, json::parse(R"({"action":"1_initial_press"})"))
+                  .empty());
+  EXPECT_TRUE(
+      extractActions(d, json::parse(R"({"action":"1_long_release"})")).empty());
+}
+
+TEST(Z2mMapperTest, SoundRemoteHasNamedButtons) {
+  // IKEA SYMFONISK E2123.
+  json remote = deviceWithExposes(json::array({actionExpose(
+      {"toggle", "track_previous", "track_next", "volume_up", "volume_down",
+       "volume_up_hold", "volume_down_hold", "dots_1_initial_press",
+       "dots_1_long_press", "dots_1_short_release", "dots_1_long_release",
+       "dots_1_double_press", "dots_2_initial_press", "dots_2_long_press",
+       "dots_2_short_release", "dots_2_long_release",
+       "dots_2_double_press"})}));
+  auto devices = parseBridgeDevices(json::array({remote}));
+  ASSERT_EQ(devices.size(), 1u);
+  const Device &d = devices[0];
+  std::vector<std::string> keys;
+  for (const auto &c : d.descriptor.channels) keys.push_back(c.key);
+  EXPECT_EQ(keys, (std::vector<std::string>{
+                      "action_1", "action_2", "action_toggle",
+                      "action_volume_up", "action_volume_down",
+                      "action_track_previous", "action_track_next"}));
+  EXPECT_EQ(d.descriptor.channels[2].caption, "przycisk odtwarzania");
+  EXPECT_EQ(d.descriptor.channels[2].actionCaps,
+            uint32_t{SUPLA_ACTION_CAP_SHORT_PRESS_x1});
+  EXPECT_EQ(d.descriptor.channels[3].actionCaps,
+            uint32_t{SUPLA_ACTION_CAP_SHORT_PRESS_x1 | SUPLA_ACTION_CAP_HOLD});
+  using Actions = std::vector<std::pair<std::string, uint32_t>>;
+  EXPECT_EQ(
+      extractActions(d, json::parse(R"({"action":"dots_2_double_press"})")),
+      (Actions{{"action_2", SUPLA_ACTION_CAP_SHORT_PRESS_x2}}));
+  EXPECT_EQ(extractActions(d, json::parse(R"({"action":"volume_down_hold"})")),
+            (Actions{{"action_volume_down", SUPLA_ACTION_CAP_HOLD}}));
+  EXPECT_EQ(extractActions(d, json::parse(R"({"action":"toggle"})")),
+            (Actions{{"action_toggle", SUPLA_ACTION_CAP_SHORT_PRESS_x1}}));
+}
+
+TEST(Z2mMapperTest, OnOffRemoteWithArrows) {
+  // IKEA STYRBAR E2001: the on/off buttons stay first, the arrows follow.
+  json remote = deviceWithExposes(json::array(
+      {actionExpose({"on", "off", "brightness_move_up", "brightness_move_down",
+                     "brightness_stop", "arrow_left_click", "arrow_left_hold",
+                     "arrow_left_release", "arrow_right_click",
+                     "arrow_right_hold", "arrow_right_release"})}));
+  auto devices = parseBridgeDevices(json::array({remote}));
+  ASSERT_EQ(devices.size(), 1u);
+  const Device &d = devices[0];
+  std::vector<std::string> keys;
+  for (const auto &c : d.descriptor.channels) keys.push_back(c.key);
+  EXPECT_EQ(keys, (std::vector<std::string>{"action_on", "action_off",
+                                            "action_arrow_left",
+                                            "action_arrow_right"}));
+  EXPECT_EQ(d.descriptor.channels[2].caption, "strzałka w lewo");
+  EXPECT_EQ(d.descriptor.channels[3].actionCaps,
+            uint32_t{SUPLA_ACTION_CAP_SHORT_PRESS_x1 | SUPLA_ACTION_CAP_HOLD});
+  using Actions = std::vector<std::pair<std::string, uint32_t>>;
+  EXPECT_EQ(extractActions(d, json::parse(R"({"action":"arrow_right_hold"})")),
+            (Actions{{"action_arrow_right", SUPLA_ACTION_CAP_HOLD}}));
+  EXPECT_EQ(extractActions(d, json::parse(R"({"action":"arrow_left_click"})")),
+            (Actions{{"action_arrow_left", SUPLA_ACTION_CAP_SHORT_PRESS_x1}}));
+  EXPECT_TRUE(
+      extractActions(d, json::parse(R"({"action":"arrow_left_release"})"))
+          .empty());
 }

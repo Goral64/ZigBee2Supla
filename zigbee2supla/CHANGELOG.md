@@ -1,5 +1,15 @@
 # Zmiany
 
+## 0.4.1
+
+- Pilot IKEA STYRBAR: strzałki w lewo i w prawo jako osobne przyciski.
+- Przyciski IKEA SOMRIG i pilot SYMFONISK gen2 (kropki, odtwarzanie,
+  głośność, utwory).
+- Głowica Aqara SRTS-A01 jako termostat.
+- Po odrzuceniu rejestracji z powodu limitu urządzeń albo wyłączonego
+  urządzenia mostek ponawia próbę co 2 minuty, bez restartu. Log mówi,
+  kiedy będzie następna próba.
+
 ## 0.4.0
 
 - Pierwsza wersja bez bety.

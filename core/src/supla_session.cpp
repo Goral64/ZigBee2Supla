@@ -881,8 +881,6 @@ void SuplaSession::handleRegisterResult(int resultCode, int activityTimeout) {
     return;
   }
 
-  Z2S_LOG_ERROR("[%s] Registration failed: %s (%d)", name_.c_str(),
-                resultCodeToString(resultCode), resultCode);
   closeRequested_ = true;
   uint64_t delay;
   switch (resultCode) {
@@ -891,6 +889,13 @@ void SuplaSession::handleRegisterResult(int resultCode, int activityTimeout) {
       // enough to catch the registration window.
       delay = 60 * 1000;
       break;
+    case SUPLA_RESULTCODE_DEVICE_LIMITEXCEEDED:
+    case SUPLA_RESULTCODE_DEVICE_DISABLED:
+    case SUPLA_RESULTCODE_LOCATION_DISABLED:
+      // Fixed by the user in Supla Cloud; pick the change up without a
+      // gateway restart.
+      delay = 2 * 60 * 1000;
+      break;
     case SUPLA_RESULTCODE_TEMPORARILY_UNAVAILABLE:
       delay = 30 * 1000;
       break;
@@ -898,6 +903,9 @@ void SuplaSession::handleRegisterResult(int resultCode, int activityTimeout) {
       delay = 10 * 60 * 1000;
       break;
   }
+  Z2S_LOG_ERROR("[%s] Registration failed: %s (%d), retrying in %d s",
+                name_.c_str(), resultCodeToString(resultCode), resultCode,
+                static_cast<int>(delay / 1000));
   scheduleReconnect(nowMs_, delay);
 }
 
