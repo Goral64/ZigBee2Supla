@@ -187,9 +187,9 @@ TEST_F(ZhaMapperTest, ButtonFromDeviceTriggers) {
                                   SUPLA_ACTION_CAP_SHORT_PRESS_x2 |
                                   SUPLA_ACTION_CAP_HOLD));
   ASSERT_EQ(d->bindings.size(), 1u);
-  EXPECT_EQ(d->bindings[0].triggerSubtype, "button_1");
-  EXPECT_EQ(d->bindings[0].triggers.at("remote_button_long_press"),
-            static_cast<uint32_t>(SUPLA_ACTION_CAP_HOLD));
+  EXPECT_EQ(
+      d->bindings[0].triggers.at({"button_1", "remote_button_long_press"}),
+      static_cast<uint32_t>(SUPLA_ACTION_CAP_HOLD));
 }
 
 TEST(ZhaButtonsTest, SeveralButtonsAreNumbered) {
@@ -358,4 +358,120 @@ TEST(ZhaAvailabilityTest, UnavailableState) {
   EXPECT_FALSE(isAvailable(state("switch.x", "unavailable")));
   EXPECT_TRUE(isAvailable(state("switch.x", "unknown")));
   EXPECT_TRUE(isAvailable(state("switch.x", "off")));
+}
+
+namespace {
+
+// A remote with the given device triggers (subtype, type) in ZHA.
+Device remoteWithTriggers(
+    const std::vector<std::pair<const char *, const char *>> &list) {
+  Snapshot s;
+  s.deviceRegistry = json::parse(R"([{"id": "r", "name": "Pilot",
+      "identifiers": [["zha", "aa:00:00:00:00:00:00:02"]],
+      "disabled_by": null}])");
+  json triggers = json::array();
+  for (const auto &[subtype, type] : list) {
+    triggers.push_back({{"platform", "device"},
+                        {"domain", "zha"},
+                        {"device_id", "r"},
+                        {"type", type},
+                        {"subtype", subtype}});
+  }
+  s.triggers["r"] = triggers;
+  auto devices = parseDevices(s);
+  EXPECT_EQ(devices.size(), 1u);
+  return devices.empty() ? Device{} : devices[0];
+}
+
+std::vector<std::string> channelKeys(const Device &d) {
+  std::vector<std::string> keys;
+  for (const auto &c : d.descriptor.channels) keys.push_back(c.key);
+  return keys;
+}
+
+constexpr const char *kShort = "remote_button_short_press";
+constexpr const char *kDouble = "remote_button_double_press";
+constexpr const char *kLong = "remote_button_long_press";
+constexpr const char *kLongRelease = "remote_button_long_release";
+
+}  // namespace
+
+TEST(ZhaButtonsTest, OnOffRemoteWithArrowsHasZigbee2mqttKeys) {
+  // IKEA STYRBAR (zhaquirks/ikea/fourbtnremote.py).
+  Device d = remoteWithTriggers({{"turn_on", kShort},
+                                 {"dim_up", kLong},
+                                 {"dim_up", kLongRelease},
+                                 {"turn_off", kShort},
+                                 {"dim_down", kLong},
+                                 {"dim_down", kLongRelease},
+                                 {"left", kShort},
+                                 {"left", kLong},
+                                 {"right", kShort},
+                                 {"right", kLong}});
+  EXPECT_EQ(channelKeys(d), (std::vector<std::string>{"action_on", "action_off",
+                                                      "action_arrow_left",
+                                                      "action_arrow_right"}));
+  EXPECT_EQ(d.descriptor.channels[0].caption, "przycisk włącz");
+  EXPECT_EQ(d.descriptor.channels[2].caption, "strzałka w lewo");
+  const Binding &on = d.bindings[0];
+  EXPECT_EQ(on.spec.actionCaps,
+            static_cast<uint32_t>(SUPLA_ACTION_CAP_SHORT_PRESS_x1 |
+                                  SUPLA_ACTION_CAP_HOLD));
+  EXPECT_EQ(on.triggers.size(), 2u);
+  EXPECT_EQ(on.triggers.at({"turn_on", kShort}),
+            static_cast<uint32_t>(SUPLA_ACTION_CAP_SHORT_PRESS_x1));
+  EXPECT_EQ(on.triggers.at({"dim_up", kLong}),
+            static_cast<uint32_t>(SUPLA_ACTION_CAP_HOLD));
+}
+
+TEST(ZhaButtonsTest, SoundRemoteHasZigbee2mqttKeys) {
+  // IKEA SYMFONISK gen2 (zhaquirks/ikea/symfonisk2.py).
+  Device d = remoteWithTriggers({{"toggle", kShort},
+                                 {"dim_up", kShort},
+                                 {"dim_up", kLong},
+                                 {"dim_down", kShort},
+                                 {"dim_down", kLong},
+                                 {"right", kShort},
+                                 {"left", kShort},
+                                 {"button_1", kShort},
+                                 {"button_1", kDouble},
+                                 {"button_1", kLong},
+                                 {"button_2", kShort},
+                                 {"button_2", kDouble},
+                                 {"button_2", kLong}});
+  EXPECT_EQ(channelKeys(d), (std::vector<std::string>{
+                                "action_1", "action_2", "action_toggle",
+                                "action_volume_up", "action_volume_down",
+                                "action_track_previous", "action_track_next"}));
+  EXPECT_EQ(d.descriptor.channels[2].caption, "przycisk przełącz");
+  EXPECT_EQ(d.descriptor.channels[3].actionCaps,
+            static_cast<uint32_t>(SUPLA_ACTION_CAP_SHORT_PRESS_x1 |
+                                  SUPLA_ACTION_CAP_HOLD));
+}
+
+TEST(ZhaButtonsTest, ShortcutButtonWithTwoButtons) {
+  // IKEA SOMRIG (zhaquirks/ikea/somrigsmartbtn.py).
+  Device d = remoteWithTriggers({{"button_1", "initial_switch_press"},
+                                 {"button_1", kShort},
+                                 {"button_1", kDouble},
+                                 {"button_1", kLong},
+                                 {"button_1", kLongRelease},
+                                 {"button_2", "initial_switch_press"},
+                                 {"button_2", kShort},
+                                 {"button_2", kDouble},
+                                 {"button_2", kLong},
+                                 {"button_2", kLongRelease}});
+  EXPECT_EQ(channelKeys(d), (std::vector<std::string>{"action_1", "action_2"}));
+  EXPECT_EQ(d.descriptor.channels[1].actionCaps,
+            static_cast<uint32_t>(SUPLA_ACTION_CAP_SHORT_PRESS_x1 |
+                                  SUPLA_ACTION_CAP_SHORT_PRESS_x2 |
+                                  SUPLA_ACTION_CAP_HOLD));
+}
+
+TEST(ZhaButtonsTest, OtherSubtypesKeepTheirNames) {
+  Device d = remoteWithTriggers(
+      {{"close", kShort}, {"button_2", kShort}, {"open", kShort}});
+  EXPECT_EQ(channelKeys(d), (std::vector<std::string>{
+                                "action_2", "action_close", "action_open"}));
+  EXPECT_EQ(d.descriptor.channels[1].caption, "przycisk close");
 }

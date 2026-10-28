@@ -8,6 +8,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
+#include <iterator>
 #include <set>
 
 namespace z2s::zha {
@@ -289,13 +290,72 @@ int buttonNumber(const std::string &subtype) {
   return std::atoi(subtype.c_str() + 7);
 }
 
-// Buttons and remotes: one action trigger channel per button (trigger
-// subtype), "action" for devices with one button and "action_<n>" for more,
-// as zigbee2mqtt names them.
+// A button in zigbee2mqtt terms: name in the channel key ("action_<name>"),
+// caption and place among the channels of the device.
+struct ButtonName {
+  std::string name;
+  std::string caption;
+  int rank;   // on/off, numbered, named, others
+  int order;  // within the rank
+};
+
+// Named buttons in the order of zigbee2mqtt.
+const char *const kNamedButtons[][2] = {
+    {"toggle", "przycisk przełącz"},
+    {"volume_up", "przycisk głośniej"},
+    {"volume_down", "przycisk ciszej"},
+    {"track_previous", "przycisk poprzedni utwór"},
+    {"track_next", "przycisk następny utwór"},
+    {"arrow_left", "strzałka w lewo"},
+    {"arrow_right", "strzałka w prawo"},
+};
+
+ButtonName namedButton(const std::string &name) {
+  for (size_t i = 0; i < std::size(kNamedButtons); i++) {
+    if (name == kNamedButtons[i][0]) {
+      return {name, kNamedButtons[i][1], 2, static_cast<int>(i)};
+    }
+  }
+  return {name, "przycisk " + name, 3, 0};
+}
+
+// The button of a trigger subtype, named as zigbee2mqtt names the same
+// button, so that a device keeps its channels when moved between the two.
+// onOff: dimmer remote (IKEA RODRET, TRADFRI E1743, STYRBAR) with
+// "turn_on"/"dim_up" on one button and "turn_off"/"dim_down" on the other.
+// media: sound remote (IKEA SYMFONISK), "toggle" without "turn_on".
+ButtonName buttonName(const std::string &subtype, bool onOff, bool media) {
+  if (onOff && (subtype == "turn_on" || subtype == "dim_up")) {
+    return {"on", "przycisk włącz", 0, 0};
+  }
+  if (onOff && (subtype == "turn_off" || subtype == "dim_down")) {
+    return {"off", "przycisk wyłącz", 0, 1};
+  }
+  int n = buttonNumber(subtype);
+  if (n >= 0) return {std::to_string(n), "przycisk " + std::to_string(n), 1, n};
+  if (subtype == "left") {
+    return namedButton(media ? "track_previous" : "arrow_left");
+  }
+  if (subtype == "right") {
+    return namedButton(media ? "track_next" : "arrow_right");
+  }
+  if (media && subtype == "dim_up") return namedButton("volume_up");
+  if (media && subtype == "dim_down") return namedButton("volume_down");
+  return namedButton(subtype);
+}
+
+// Buttons and remotes: one action trigger channel per button, "action" for
+// devices with one button and "action_<name>" for more, as zigbee2mqtt names
+// them.
 void addActionBindings(const json &triggers, std::vector<Binding> *bindings) {
   if (!triggers.is_array()) return;
-  std::vector<std::string> subtypes;  // in order of appearance
-  std::map<std::string, Binding> buttons;
+  struct Trigger {
+    std::string subtype;
+    std::string type;
+    uint32_t cap;
+  };
+  std::vector<Trigger> found;
+  std::set<std::string> subtypes;
   for (const auto &t : triggers) {
     if (stringOr(t, "platform") != "device" || stringOr(t, "domain") != "zha") {
       continue;
@@ -304,29 +364,37 @@ void addActionBindings(const json &triggers, std::vector<Binding> *bindings) {
     std::string subtype = stringOr(t, "subtype");
     uint32_t cap = triggerCap(type);
     if (cap == 0 || subtype.empty()) continue;
-    if (buttons.find(subtype) == buttons.end()) subtypes.push_back(subtype);
-    Binding &b = buttons[subtype];
-    b.spec.kind = ChannelKind::ActionTrigger;
-    b.spec.actionCaps |= cap;
-    b.triggerSubtype = subtype;
-    b.triggers[type] = cap;
+    found.push_back({subtype, type, cap});
+    subtypes.insert(subtype);
   }
-  std::stable_sort(subtypes.begin(), subtypes.end(),
-                   [](const std::string &a, const std::string &b) {
-                     int na = buttonNumber(a), nb = buttonNumber(b);
-                     if (na < 0 || nb < 0) return false;
-                     return na < nb;
+  auto has = [&](const char *s) { return subtypes.count(s) != 0; };
+  bool onOff =
+      has("turn_on") && has("dim_up") && has("turn_off") && has("dim_down");
+  bool media = has("toggle") && !has("turn_on");
+
+  std::vector<ButtonName> names;  // in order of appearance
+  std::map<std::string, Binding> buttons;
+  for (const auto &t : found) {
+    ButtonName name = buttonName(t.subtype, onOff, media);
+    if (buttons.find(name.name) == buttons.end()) names.push_back(name);
+    Binding &b = buttons[name.name];
+    b.spec.kind = ChannelKind::ActionTrigger;
+    b.spec.actionCaps |= t.cap;
+    b.triggers[{t.subtype, t.type}] = t.cap;
+  }
+  std::stable_sort(names.begin(), names.end(),
+                   [](const ButtonName &a, const ButtonName &b) {
+                     if (a.rank != b.rank) return a.rank < b.rank;
+                     return a.order < b.order;
                    });
-  for (const auto &subtype : subtypes) {
-    Binding &b = buttons[subtype];
-    if (subtypes.size() == 1) {
+  for (const auto &name : names) {
+    Binding &b = buttons[name.name];
+    if (names.size() == 1) {
       b.spec.key = "action";
       b.spec.caption = "przycisk";
     } else {
-      int n = buttonNumber(subtype);
-      std::string name = n >= 0 ? std::to_string(n) : subtype;
-      b.spec.key = "action_" + name;
-      b.spec.caption = "przycisk " + name;
+      b.spec.key = "action_" + name.name;
+      b.spec.caption = name.caption;
     }
     bindings->push_back(b);
   }

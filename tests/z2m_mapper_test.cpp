@@ -1046,7 +1046,7 @@ TEST(Z2mMapperTest, SoundRemoteHasNamedButtons) {
                       "action_1", "action_2", "action_toggle",
                       "action_volume_up", "action_volume_down",
                       "action_track_previous", "action_track_next"}));
-  EXPECT_EQ(d.descriptor.channels[2].caption, "przycisk odtwarzania");
+  EXPECT_EQ(d.descriptor.channels[2].caption, "przycisk przełącz");
   EXPECT_EQ(d.descriptor.channels[2].actionCaps,
             uint32_t{SUPLA_ACTION_CAP_SHORT_PRESS_x1});
   EXPECT_EQ(d.descriptor.channels[3].actionCaps,

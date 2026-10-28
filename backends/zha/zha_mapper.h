@@ -37,10 +37,10 @@ struct Binding {
   std::string powerEntityId;
   std::string voltageEntityId;
   std::string currentEntityId;
-  // ActionTrigger only: device trigger subtype (e.g. "button_1") and its
-  // trigger types (e.g. "remote_button_short_press") -> SUPLA_ACTION_CAP_*.
-  std::string triggerSubtype;
-  std::map<std::string, uint32_t> triggers;
+  // ActionTrigger only: device trigger (subtype, type), e.g. ("button_1",
+  // "remote_button_short_press") -> SUPLA_ACTION_CAP_*. One button can have
+  // several subtypes ("turn_on" for a press, "dim_up" for holding it).
+  std::map<std::pair<std::string, std::string>, uint32_t> triggers;
   // Thermostat only (entityId = climate entity, which also gives the room
   // temperature of the thermometer channel).
   bool canTurnOff = false;    // "off" in hvac_modes

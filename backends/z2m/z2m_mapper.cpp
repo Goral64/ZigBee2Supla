@@ -491,7 +491,7 @@ struct NamedButton {
 };
 
 const NamedButton kNamedButtons[] = {
-    {"toggle", "przycisk odtwarzania"},
+    {"toggle", "przycisk przełącz"},
     {"volume_up", "przycisk głośniej"},
     {"volume_down", "przycisk ciszej"},
     {"track_previous", "przycisk poprzedni utwór"},
