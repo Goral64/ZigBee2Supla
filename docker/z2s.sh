@@ -224,8 +224,20 @@ fetch_certificate() {
     die "Przerwano. Skopiuj certyfikat ręcznie do certs/supla-server.crt."
 }
 
-# pick_usb_adapter_type <compose dir>: zigbee2mqtt adapter type of the USB
-# coordinator, empty = keep the one in zigbee2mqtt/configuration.yaml.
+# z2m_data_dir <compose dir>: data directory of zigbee2mqtt
+# (ZIGBEE2MQTT_DATA in .env, ./zigbee2mqtt by default).
+z2m_data_dir() {
+  local dir
+  dir=$(get_env "$1/.env" ZIGBEE2MQTT_DATA)
+  dir=${dir:-./zigbee2mqtt}
+  case $dir in
+    /*) echo "$dir" ;;
+    *) echo "$1/${dir#./}" ;;
+  esac
+}
+
+# pick_usb_adapter_type <zigbee2mqtt data dir>: zigbee2mqtt adapter type of
+# the USB coordinator, empty = keep the one in its configuration.yaml.
 pick_usb_adapter_type() {
   local options=(
     "TI CC2652/CC1352, np. SONOFF ZBDongle-P"
@@ -233,7 +245,7 @@ pick_usb_adapter_type() {
     "deCONZ: ConBee II/III, RaspBee"
     "ZiGate"
   )
-  if [ -f "$1/zigbee2mqtt/configuration.yaml" ]; then
+  if [ -f "$1/configuration.yaml" ]; then
     options+=("bez zmian, zigbee2mqtt jest już skonfigurowany")
   fi
   case $(choose "Układ ZigBee w koordynatorze:" "${options[@]}") in
@@ -243,6 +255,57 @@ pick_usb_adapter_type() {
     4) echo zigate ;;
     *) echo ;;
   esac
+}
+
+# pick_zigbee_channel: channel of a new ZigBee network, away from the 2.4 GHz
+# Wi-Fi like on the zigbee2mqtt setup page. Only 11, 15, 20 and 25, which
+# all ZigBee devices support.
+pick_zigbee_channel() {
+  local wifi channel
+  echo "ZigBee, Wi-Fi 2,4 GHz, Thread i Bluetooth dzielą to samo pasmo." >&2
+  echo "Kanał ZigBee najlepiej ustawić z dala od kanału Wi-Fi. Jego późniejsza" >&2
+  echo "zmiana wymaga ponownego parowania części urządzeń." >&2
+  case $(choose "Kanał sieci ZigBee:" \
+    "dobierz do kanału mojego Wi-Fi 2,4 GHz" \
+    "11 (2405 MHz), pokrywa się z Wi-Fi 1" \
+    "15 (2425 MHz), pokrywa się z Wi-Fi 2-5" \
+    "20 (2450 MHz), pokrywa się z Wi-Fi 7-10" \
+    "25 (2475 MHz), pokrywa się z Wi-Fi 12-13") in
+    2) channel=11 ;;
+    3) channel=15 ;;
+    4) channel=20 ;;
+    5) channel=25 ;;
+    *)
+      while true; do
+        wifi=$(ask "Kanał Wi-Fi 2,4 GHz (1-13, widać go w ustawieniach routera)")
+        [[ $wifi =~ ^[0-9]+$ ]] && ((wifi >= 1 && wifi <= 13)) && break
+      done
+      if ((wifi <= 5)); then
+        channel=25
+      elif ((wifi <= 10)); then
+        channel=11
+      else
+        channel=15
+      fi
+      echo "Kanał ZigBee: $channel" >&2
+      ;;
+  esac
+  echo "$channel"
+}
+
+# write_zigbee_channel <zigbee2mqtt data dir> <channel>: configuration for
+# the first start of zigbee2mqtt. It generates the network key and IDs
+# itself and adds the rest from the compose variables.
+write_zigbee_channel() {
+  mkdir -p "$1"
+  cat >"$1/configuration.yaml" <<EOF
+# Written by z2s.sh before the first start of zigbee2mqtt.
+advanced:
+  channel: $2
+  network_key: GENERATE
+  pan_id: GENERATE
+  ext_pan_id: GENERATE
+EOF
 }
 
 # set_coordinator <compose .env> <USB adapter> <network port> <adapter
@@ -283,6 +346,7 @@ cmd_setup() {
   local env_file sd_env
   local mqtt_host='' mqtt_port=1883 mqtt_user='' mqtt_pass=''
   local ha_url='' ha_token='' ha_duplicates=''
+  local z2m_data='' zigbee_channel=''
 
   echo "${BOLD}Konfiguracja zigbee2supla${NC}"
   echo
@@ -312,14 +376,15 @@ cmd_setup() {
     "koordynator sieciowy, np. SLZB-06 (zigbee2mqtt zostanie zainstalowany)" \
     "zigbee2mqtt, który już działa (np. w Home Assistant)" \
     "ZHA w Home Assistant (bez MQTT)")
+  if [ "$where" = 2 ]; then
+    z2m_data=$(z2m_data_dir "$SUPLA_DOCKER_DIR")
+  else
+    z2m_data=$(z2m_data_dir "$PKG_DIR")
+  fi
   if [ "$source" = 1 ]; then
     OWN_COORDINATOR=yes
     adapter=$(pick_adapter)
-    if [ "$where" = 2 ]; then
-      serial_adapter=$(pick_usb_adapter_type "$SUPLA_DOCKER_DIR")
-    else
-      serial_adapter=$(pick_usb_adapter_type "$PKG_DIR")
-    fi
+    serial_adapter=$(pick_usb_adapter_type "$z2m_data")
   elif [ "$source" = 2 ]; then
     OWN_COORDINATOR=yes
     serial_port="tcp://$(ask "Adres IP koordynatora"):$(ask "Port koordynatora" 6638)"
@@ -350,6 +415,11 @@ cmd_setup() {
     if [ -n "$mqtt_user" ]; then
       mqtt_pass=$(ask_secret "Hasło MQTT")
     fi
+  fi
+
+  if [ "$OWN_COORDINATOR" = yes ] && [ ! -f "$z2m_data/configuration.yaml" ]; then
+    echo
+    zigbee_channel=$(pick_zigbee_channel)
   fi
 
   if [ "$where" = 2 ]; then
@@ -396,6 +466,9 @@ cmd_setup() {
     set_env "$env_file" Z2S_SOURCE z2m
   fi
   chmod 600 "$env_file"
+  if [ -n "$zigbee_channel" ]; then
+    write_zigbee_channel "$z2m_data" "$zigbee_channel"
+  fi
 
   cat >"$MODE_FILE" <<EOF
 MODE=$MODE
