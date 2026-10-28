@@ -167,6 +167,10 @@ w sieci ponad 100 urządzeń:
 | światła ze ściemnianiem | IKEA LED2002G5, taśma IKEA ORMANÄS L2112 |
 | termostaty | głowice Tuya TS0601, termostat ścienny Moes BHT-002 |
 
+Użytkownicy sprawdzili jeszcze m.in. czujniki IKEA BADRING, PARASOLL
+i VALLHORN E2134, SONOFF SNZB-02D, termostat Avatto ZWT198 i pilot
+STYRBAR (przyciski włącz i wyłącz).
+
 Czujniki temperatury, wilgotności i ciśnienia, piloty wieloprzyciskowe,
 czujniki dymu, gazu i CO oraz światła z kolorem są sprawdzone tylko
 testami, bez prawdziwych urządzeń.
@@ -189,7 +193,7 @@ program samego urządzenia), zerowania licznika energii.
 | Objaw (log mostka) | Przyczyna i rozwiązanie |
 |---|---|
 | `registration of new devices is disabled` | Włącz rejestrację urządzeń w Supla Cloud; mostek ponawia próbę co minutę. |
-| `device limit exceeded` | Limit urządzeń na koncie Supli; zwiększ go albo ogranicz urządzenia opcją `include`/`exclude`. |
+| `device limit exceeded` | Limit urządzeń na koncie Supli; zwiększ go albo ogranicz urządzenia opcją `include`/`exclude`. Mostek ponawia próbę co 2 minuty. |
 | `channel conflict` | Urządzenie w Supli ma inne kanały niż teraz (np. po skasowaniu `identities.json`). Przywróć `identities.json` z kopii; w ostateczności usuń urządzenie w Supla Cloud. |
 | urządzenia co chwilę rozłączają się i łączą | Dwa mostki z tym samym `identities.json`. Zostaw jeden. |
 | `ZHA: the ZHA integration is not loaded` | Home Assistant dopiero startuje albo nie ma w nim ZHA; mostek ponawia próbę. |

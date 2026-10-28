@@ -199,6 +199,21 @@ TEST_F(SessionTest, RegistrationDisabledIsRetriedLater) {
   EXPECT_TRUE(session_.isRegistered());
 }
 
+TEST_F(SessionTest, DeviceLimitExceededIsRetriedLater) {
+  server_.registerResultCode = SUPLA_RESULTCODE_DEVICE_LIMITEXCEEDED;
+  run(5);
+  EXPECT_FALSE(session_.isRegistered());
+  EXPECT_EQ(server_.acceptedCount, 1);
+
+  server_.registerResultCode = SUPLA_RESULTCODE_TRUE;
+  run(6000);  // 1 min later: still waiting
+  EXPECT_EQ(server_.acceptedCount, 1);
+
+  run(9000);  // 2.5 min in total: retried and registered
+  EXPECT_EQ(server_.acceptedCount, 2);
+  EXPECT_TRUE(session_.isRegistered());
+}
+
 TEST_F(SessionTest, ReconnectsWhenServerClosesConnection) {
   run(5);
   ASSERT_TRUE(session_.isRegistered());

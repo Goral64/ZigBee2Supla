@@ -203,6 +203,11 @@ starcie generuje samopodpisany certyfikat `ssl/server/cert.crt` z nazwą
 roku również z powodu daty. Przypięcie chroni przed podstawieniem innego
 serwera, a przy tym nie przestaje działać po roku.
 
+Jeśli certyfikat serwera wystawia własne CA, a w certyfikacie jest nazwa,
+pod którą bramka łączy się z serwerem, wygodniejszy jest poziom `1`
+z `Z2S_SUPLA_CA_FILE` wskazującym plik CA. Odnowienie certyfikatu serwera
+nie wymaga wtedy żadnych zmian w bramce.
+
 Jeśli wygenerujesz w supla-docker nowy certyfikat serwera, zrestartuj
 kontener zigbee2supla, żeby wczytał nowy plik:
 `docker restart supla-zigbee2supla`.
@@ -222,7 +227,7 @@ kontenera) skopiuj ten plik, zanim nowa instancja uruchomi się pierwszy raz.
 | `Cannot load pinned certificate /etc/supla-server-ssl/cert.crt` | supla-server jeszcze nie wygenerował certyfikatu albo w compose jest zła ścieżka do `ssl/server`. Kontener uruchomi się ponownie sam (`restart: unless-stopped`). |
 | `TLS certificate verification failed ... certificate rejected` | certyfikat serwera różni się od przypiętego; zrestartuj kontener po zmianie certyfikatu |
 | `Registration failed: registration of new devices is disabled` | włącz rejestrację urządzeń w Supla Cloud; mostek ponawia próbę co minutę |
-| `Registration failed: device limit exceeded` | zwiększ limit urządzeń na koncie |
+| `Registration failed: device limit exceeded` | zwiększ limit urządzeń na koncie; mostek ponawia próbę co 2 minuty |
 | `MQTT: connection refused` | sprawdź `Z2S_MQTT_*`; broker w HA musi być osiągalny z hosta Dockera |
 | `zigbee2mqtt: 0 of N device(s) can be bridged` | urządzenia nie mają obsługiwanych funkcji (lista w README) albo zły `Z2S_Z2M_BASE_TOPIC` |
 | `ZHA: the ZHA integration is not loaded` | Home Assistant dopiero startuje albo nie ma w nim ZHA; mostek ponawia próbę |
