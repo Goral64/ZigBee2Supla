@@ -1,5 +1,11 @@
 # Zmiany
 
+## 0.4.2
+
+- Bez zmian w dodatku. Wydanie dotyczy zestawu Docker z własnym
+  koordynatorem: zigbee2mqtt startuje bez strony pierwszego uruchomienia,
+  a kreator `z2s.sh` pyta o układ koordynatora USB.
+
 ## 0.4.1
 
 - Pilot IKEA STYRBAR: strzałki w lewo i w prawo jako osobne przyciski.
