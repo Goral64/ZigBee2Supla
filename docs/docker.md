@@ -281,6 +281,12 @@ Koordynator USB podłącz i sprawdź, pod jaką nazwą widzi go system:
 ls -l /dev/serial/by-id/
 ```
 
+zigbee2mqtt w kontenerze nie rozpozna sam rodzaju koordynatora USB, więc
+trzeba go podać: `zstack` dla TI CC2652/CC1352 (np. SONOFF ZBDongle-P),
+`ember` dla Silicon Labs EFR32 (np. SONOFF ZBDongle-E, Dongle Max, Home
+Assistant Connect ZBT-1), `deconz` dla ConBee i RaspBee, `zigate` dla
+ZiGate.
+
 Koordynator sieciowy ma adres IP i port, zwykle 6638. zigbee2mqtt łączy
 się z nim pod adresem w rodzaju `tcp://192.168.1.50:6638`. Trzeba też znać
 jego układ (pokazuje go strona WWW koordynatora): TI CC2652/CC1352 to
@@ -295,6 +301,7 @@ URL=https://raw.githubusercontent.com/Goral64/ZigBee2Supla/main/docker
 curl -LO $URL/standalone/docker-compose.yml
 curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt.yml
 curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt-usb.yml
+curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt-usb-adapter.yml
 curl -LO $URL/zigbee2mqtt/docker-compose.zigbee2mqtt-network.yml
 curl -L -o zigbee2supla.env $URL/standalone/zigbee2supla.env.example
 ```
@@ -305,7 +312,8 @@ zostaw puste. Potem utwórz plik `.env`. Dla koordynatora USB:
 
 ```
 ZIGBEE_ADAPTER=/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_...
-COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml
+ZIGBEE2MQTT_SERIAL_ADAPTER=zstack
+COMPOSE_FILE=docker-compose.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml:docker-compose.zigbee2mqtt-usb-adapter.yml
 ```
 
 Dla sieciowego:
@@ -328,14 +336,16 @@ Najpierw dołącz mostek do supla-docker, jak w
 [Dołączenie do supla-docker](#2-dołączenie-do-supla-docker), ale pola
 `Z2S_MQTT_*` w `zigbee2supla.env` zostaw puste. Następnie w katalogu
 supla-docker pobierz `docker-compose.zigbee2mqtt.yml` i plik dla swojego
-koordynatora: `docker-compose.zigbee2mqtt-usb.yml` albo
+koordynatora: `docker-compose.zigbee2mqtt-usb.yml`
+z `docker-compose.zigbee2mqtt-usb-adapter.yml` albo
 `docker-compose.zigbee2mqtt-network.yml` (jak wyżej). W `.env` supla-docker
 dopisz te pliki na końcu `COMPOSE_FILE` i dodaj ustawienia koordynatora
 jak wyżej, np. dla USB:
 
 ```
-COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml
+COMPOSE_FILE=docker-compose.yml:docker-compose.standalone.yml:docker-compose.zigbee2supla.yml:docker-compose.zigbee2mqtt.yml:docker-compose.zigbee2mqtt-usb.yml:docker-compose.zigbee2mqtt-usb-adapter.yml
 ZIGBEE_ADAPTER=/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_...
+ZIGBEE2MQTT_SERIAL_ADAPTER=zstack
 ```
 
 i uruchom `./supla.sh start`. Przy pierwszym starcie supla-docker zdarza
@@ -344,19 +354,20 @@ w kółko `Connection refused`. Wtedy wystarczy `docker restart supla-server`.
 
 ### Pierwsze uruchomienie zigbee2mqtt
 
-1. Otwórz `http://<adres maszyny>:8080`. zigbee2mqtt pokaże formularz
-   pierwszego uruchomienia.
-2. Dla koordynatora USB wybierz jego rodzaj (np. `zstack` dla SONOFF
-   ZBDongle-P, `ember` dla ZBDongle-E, `deconz` dla ConBee). Koordynatora
-   sieciowego nie ma na liście „Devices found”, ale jego adres i rodzaj
-   są już ustawione. Portu i MQTT nie zmieniaj. W „Closest WiFi Channel” wpisz kanał
-   swojej sieci Wi-Fi 2,4 GHz, a zigbee2mqtt dobierze kanał ZigBee,
-   który jej nie przeszkadza. Kanału ZigBee nie da się później łatwo
-   zmienić.
-3. Zapisz. Po chwili otworzy się zwykły interfejs zigbee2mqtt.
-4. W Supla Cloud włącz rejestrację nowych urządzeń.
-5. W zigbee2mqtt kliknij „Permit join” i sparuj urządzenie. Po chwili
+zigbee2mqtt nie pokazuje strony pierwszego uruchomienia: koordynator
+i MQTT są już ustawione, a sieć ZigBee tworzy się sama, z losowym kluczem
+i domyślnym kanałem 11.
+
+1. Otwórz `http://<adres maszyny>:8080`.
+2. W Supla Cloud włącz rejestrację nowych urządzeń.
+3. W zigbee2mqtt kliknij „Permit join” i sparuj urządzenie. Po chwili
    pojawi się w Supli jako osobne urządzenie.
+
+Jeśli zigbee2mqtt był już uruchomiony wcześniej, zostaje jego
+konfiguracja z `./zigbee2mqtt/configuration.yaml`. Typ koordynatora USB
+z `.env` ma przed nią pierwszeństwo; bez pliku
+`docker-compose.zigbee2mqtt-usb-adapter.yml` zostaje typ z tej
+konfiguracji. `./z2s.sh` w takim przypadku pozwala go zostawić.
 
 Mosquitto jest dostępny tylko wewnątrz tego zestawu, bez hasła i bez
 wystawionego portu. Dane zigbee2mqtt (klucz sieci i sparowane urządzenia)

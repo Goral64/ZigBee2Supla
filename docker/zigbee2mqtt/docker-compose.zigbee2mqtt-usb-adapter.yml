@@ -1,0 +1,10 @@
+# Adapter type of the USB coordinator, next to docker-compose.zigbee2mqtt-usb.yml.
+# Set in .env:
+#   ZIGBEE2MQTT_SERIAL_ADAPTER=zstack (TI CC2652/CC1352), ember (Silicon Labs),
+#   deconz (ConBee, RaspBee) or zigate
+# zigbee2mqtt cannot discover the USB coordinator from a container. Without
+# this file the type from zigbee2mqtt/configuration.yaml is used.
+services:
+  zigbee2mqtt:
+    environment:
+      ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: ${ZIGBEE2MQTT_SERIAL_ADAPTER:?set ZIGBEE2MQTT_SERIAL_ADAPTER in .env}
