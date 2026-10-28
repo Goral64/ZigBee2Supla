@@ -1,5 +1,13 @@
 # Zmiany
 
+## 0.4.3
+
+- ZHA: piloty IKEA (RODRET, TRADFRI on/off, STYRBAR, SYMFONISK gen2)
+  dostają takie same przyciski jak przy Zigbee2MQTT, z przytrzymaniem
+  przy włącz/wyłącz i głośności.
+- Kreator `z2s.sh` pyta przy nowej sieci o kanał ZigBee i może go dobrać
+  do kanału Wi-Fi.
+
 ## 0.4.2
 
 - Bez zmian w dodatku. Wydanie dotyczy zestawu Docker z własnym

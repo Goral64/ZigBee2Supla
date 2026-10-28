@@ -447,12 +447,12 @@ bool ZhaBackend::syncDevices(WebSocketClient *ws) {
   for (const auto &device : devices) {
     for (const auto &b : device.bindings) {
       if (b.spec.kind != ChannelKind::ActionTrigger) continue;
-      for (const auto &[type, action] : b.triggers) {
+      for (const auto &[subtypeAndType, action] : b.triggers) {
         json trigger = {{"platform", "device"},
                         {"domain", "zha"},
                         {"device_id", device.haDeviceId},
-                        {"type", type},
-                        {"subtype", b.triggerSubtype}};
+                        {"type", subtypeAndType.second},
+                        {"subtype", subtypeAndType.first}};
         int id = call(ws, {{"type", "subscribe_trigger"}, {"trigger", trigger}},
                       &ignored);
         if (id == 0) return false;

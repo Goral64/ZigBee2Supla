@@ -53,7 +53,13 @@ rozpoznawane po encjach HA:
   moc, napięcie, prąd),
 * `climate` z trybem `heat` jako termometr i termostat,
 * przyciski i piloty z wyzwalaczy urządzenia, tych samych, które HA
-  pokazuje w automatyzacjach („Naciśnięto przycisk…”),
+  pokazuje w automatyzacjach („Naciśnięto przycisk…”). Kanały nazywają się
+  tak jak przy zigbee2mqtt: piloty IKEA RODRET, TRADFRI on/off i STYRBAR
+  mają „przycisk włącz” i „przycisk wyłącz” (krótko i przytrzymanie),
+  strzałki STYRBAR i przyciski SYMFONISK (głośniej, ciszej, utwory)
+  dostają własne kanały. Pilot dodany przez starszą wersję mostka miał
+  kanały nazwane jak w ZHA (np. `turn_on`, `dim_up`); zostają one
+  offline, a nowe są dopisywane,
 * bateria z encji baterii.
 
 Pomijane są encje konfiguracyjne i diagnostyczne (blokada rodzicielska,
