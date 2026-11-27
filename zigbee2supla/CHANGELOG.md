@@ -1,5 +1,11 @@
 # Zmiany
 
+## 0.4.4
+
+- Obraz zbudowany na nowszym Alpine Linux (3.24, na armv7 3.22), bo
+  wspierana do tej pory wersja 3.21 nie dostaje już poprawek. Bez zmian
+  w działaniu.
+
 ## 0.4.3
 
 - ZHA: piloty IKEA (RODRET, TRADFRI on/off, STYRBAR, SYMFONISK gen2)
