@@ -11,7 +11,7 @@
 # The build stage uses the same base as the final image, so the binary always
 # matches its C library (both default images are Alpine/musl).
 
-ARG BUILD_FROM=alpine:3.21
+ARG BUILD_FROM=alpine:3.24
 
 FROM ${BUILD_FROM} AS build
 RUN apk add --no-cache build-base cmake ninja openssl-dev mosquitto-dev \

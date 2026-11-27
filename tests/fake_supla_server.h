@@ -7,6 +7,7 @@
 #include <proto.h>
 
 #include <array>
+#include <cstdint>
 #include <deque>
 #include <map>
 #include <memory>

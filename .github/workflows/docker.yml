@@ -60,10 +60,13 @@ jobs:
         include:
           - arch: amd64
             platform: linux/amd64
+            base: "3.24"
           - arch: aarch64
             platform: linux/arm64
+            base: "3.24"
           - arch: armv7
             platform: linux/arm/v7
+            base: "3.22"
     steps:
       - uses: actions/checkout@v7
       - name: Image name and version
@@ -83,7 +86,7 @@ jobs:
           target: addon
           platforms: ${{ matrix.platform }}
           build-args: |
-            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-base:3.21
+            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-base:${{ matrix.base }}
           push: true
           tags: ${{ env.IMAGE }}:${{ env.VERSION }}
           cache-from: type=gha,scope=addon-${{ matrix.arch }}
